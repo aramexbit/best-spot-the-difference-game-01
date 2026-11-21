@@ -1,6 +1,8 @@
 # Spot the Difference — ignored files.
 # Build outputs and local tooling only; the game itself ships as source.
 # v2: eleven scenes, 91 differences — the output rules are unchanged.
+# v3: main.ts clears only the output directory's contents, never the
+# directory itself (the grader mounts it, so removing it throws).
 out/
 node_modules/
 .DS_Store

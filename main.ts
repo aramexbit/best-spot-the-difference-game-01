@@ -12,7 +12,7 @@
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -20,14 +20,30 @@ import { buildDossier } from './vendor/makefun-game.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
+/**
+ * Remove everything inside `dir` without removing `dir` itself.
+ * The grader mounts the output directory as a volume, so removing
+ * the mount point throws at once: v2 died on this call in 387 ms
+ * with exit 1, before copying a single file, and the failure
+ * reproduces locally as EACCES at the same call under the grader's
+ * mount (read-only repo, another cwd, uid 65534, empty mounted
+ * output). The directory already exists at the grader; creating it
+ * only matters for a local run.
+ */
+function clearDirectoryContents(dir: string): void {
+  mkdirSync(dir, { recursive: true });
+  for (const name of readdirSync(dir)) {
+    rmSync(join(dir, name), { recursive: true, force: true });
+  }
+}
+
 // Start from a clean output directory so a stale file from an earlier
 // run can never leak into the entry. Fail loudly when the game itself
 // is missing instead of handing in an empty directory.
 if (!existsSync(join(here, 'game', 'index.html'))) {
   throw new Error('main.ts: game/index.html is missing; nothing to hand in');
 }
-rmSync(out, { recursive: true, force: true });
-mkdirSync(out, { recursive: true });
+clearDirectoryContents(out);
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) {
