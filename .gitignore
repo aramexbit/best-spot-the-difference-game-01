@@ -1,0 +1,11 @@
+# Spot the Difference — ignored files.
+# Build outputs and local tooling only; the game itself ships as source.
+out/
+node_modules/
+.DS_Store
+*.log
+# Local screenshots and playtest captures live outside the repo.
+captures/
+# Submission bundle built later, outside this repository.
+transcripts.tar.gz
+*.tmp
