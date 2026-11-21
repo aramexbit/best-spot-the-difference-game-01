@@ -45,6 +45,7 @@ import {
 import {
   LEVEL_CARDS,
   NEXT_BUTTON,
+  PAUSE_BUTTON,
   RETRY_BUTTON,
   START_BUTTON,
   createRenderer,
@@ -193,6 +194,12 @@ function runGame() {
       return;
     }
     if (screen !== SCREEN_PLAY) return;
+    // The orange pause circle in the HUD's top-right corner (v4).
+    if (inRect(point.x, point.y, PAUSE_BUTTON)) {
+      screen = SCREEN_PAUSED;
+      announce('Paused.');
+      return;
+    }
     if (inRect(point.x, point.y, HUD.hintButton)) {
       if (world.useHint() & EVENT_HINT) sound.hint();
       return;

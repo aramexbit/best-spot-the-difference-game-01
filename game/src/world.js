@@ -16,6 +16,8 @@
 // sunny yellow, coral, mint and warm cream. Every scene is dense: more
 // objects, animals, decorations and small activities, so each frame is
 // busy and worth studying (the TABUH lesson: ramai + ada isinya).
+// v4: the opening hunt is a sunny playground (see paintPlayground), and
+// the found rings are the concept's bold red circles (see render.js).
 
 import { HINT, LEVELS, PANEL, SCORE } from './config.js';
 
@@ -128,6 +130,99 @@ function sun(ctx, x, y, r, rayColor) {
   ctx.fill();
 }
 
+// A small songbird in flight: body, head, beak, wing and tail.
+function bird(ctx, x, y, color) {
+  ctx.fillStyle = color;
+  ellipse(ctx, x, y, 12, 8);
+  ctx.beginPath();
+  ctx.arc(x + 9, y - 5, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff9f43';
+  ctx.beginPath();
+  ctx.moveTo(x + 14, y - 6);
+  ctx.lineTo(x + 20, y - 3);
+  ctx.lineTo(x + 14, y - 1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x - 4, y - 4);
+  ctx.quadraticCurveTo(x - 2, y - 16, x + 6, y - 12);
+  ctx.quadraticCurveTo(x + 2, y - 4, x - 4, y - 4);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x - 11, y + 2);
+  ctx.lineTo(x - 20, y + 8);
+  ctx.lineTo(x - 12, y + 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(x + 10, y - 6, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ellipse(ctx, x - 2, y + 3, 5, 3);
+}
+
+// A striped hot-air balloon: envelope, basket and strings.
+function balloon(ctx, x, y, stripe) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(x, y, 22, 27, 0, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = stripe;
+  ctx.fillRect(x - 22, y - 27, 44, 54);
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(x - 11, y - 27, 11, 54);
+  ctx.fillRect(x + 7, y - 27, 8, 54);
+  ctx.restore();
+  ctx.strokeStyle = '#8a6b46';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 22, 27, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y + 22);
+  ctx.lineTo(x - 8, y + 38);
+  ctx.moveTo(x + 12, y + 22);
+  ctx.lineTo(x + 8, y + 38);
+  ctx.stroke();
+  ctx.fillStyle = '#8a5a2b';
+  ctx.fillRect(x - 8, y + 38, 16, 10);
+}
+
+// A soccer ball: white with dark (or red) pentagon patches.
+function soccerBall(ctx, x, y, r, patch) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  ctx.fillStyle = patch;
+  ctx.beginPath();
+  for (let i = 0; i < 5; i += 1) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    const px = x + Math.cos(a) * 7;
+    const py = y + Math.sin(a) * 7;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+  ctx.fill();
+  for (const a of [0.4, 1.8, 3.0, 4.4, 5.6]) {
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * (r - 3), y + Math.sin(a) * (r - 3), 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
 // A four-point sparkle star.
 function sparkle(ctx, x, y, s, color) {
   ctx.fillStyle = color;
@@ -155,216 +250,408 @@ function skyPatch(ctx, x, y, r) {
   ctx.fill();
 }
 
-// --- Level 1: Harbor Morning -------------------------------------------
-const HARBOR_DIFFS = [
+// --- Level 1: Sunny Playground ------------------------------------------
+// v4: the opening hunt is the concept's playground — a boy in blue, a
+// girl in pink, their brown-and-white dog, a yellow slide under a red
+// roof, a smiling sun and a hot-air balloon over a city skyline. Seven
+// differences, each a colour or an accessory the altered panel repaints
+// in place, so the two panels match everywhere else.
+const PLAYGROUND_DIFFS = [
   {
-    id: 'sun-rays', name: 'Sun rays', x: 470, y: 70, r: 44,
+    id: 'sun-glasses', name: 'Sun sunglasses', x: 330, y: 76, r: 30,
     apply(ctx) {
-      ctx.fillStyle = daySky(ctx);
+      // Cool shades over the smiling sun: two black lenses, a bridge
+      // and arms. Additive only — the sun's face stays underneath.
+      ctx.fillStyle = '#1a1a1a';
       ctx.beginPath();
-      ctx.arc(470, 70, 56, 0, Math.PI * 2);
+      ctx.roundRect(310, 66, 18, 13, 5);
+      ctx.roundRect(332, 66, 18, 13, 5);
       ctx.fill();
-      ctx.fillStyle = '#ffd94d';
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(470, 70, 32, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(328, 72);
+      ctx.lineTo(332, 72);
+      ctx.moveTo(310, 70);
+      ctx.lineTo(304, 66);
+      ctx.moveTo(350, 70);
+      ctx.lineTo(356, 66);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.fillRect(313, 68, 5, 4);
+      ctx.fillRect(335, 68, 5, 4);
     },
   },
   {
-    id: 'sail-color', name: 'Sail colour', x: 305, y: 255, r: 34,
+    id: 'balloon-color', name: 'Balloon stripes', x: 485, y: 100, r: 28,
     apply(ctx) {
+      // The same balloon, repainted blue-white over the red-white one.
+      balloon(ctx, 485, 100, '#3f7dff');
+    },
+  },
+  {
+    id: 'bird-color', name: 'Bird colour', x: 140, y: 100, r: 26,
+    apply(ctx) {
+      // The same little bird, repainted red over the blue one.
+      bird(ctx, 140, 100, '#e5534b');
+    },
+  },
+  {
+    id: 'flag-color', name: 'Roof flag', x: 292, y: 147, r: 20,
+    apply(ctx) {
+      // The same little flag on the play-structure roof, now blue.
       ctx.fillStyle = '#3f7dff';
       ctx.beginPath();
-      ctx.moveTo(305, 205);
-      ctx.lineTo(305, 292);
-      ctx.lineTo(352, 292);
+      ctx.moveTo(280, 140);
+      ctx.lineTo(306, 147);
+      ctx.lineTo(280, 154);
       ctx.closePath();
       ctx.fill();
     },
   },
   {
-    id: 'gull-missing', name: 'Seagull', x: 330, y: 108, r: 26,
-    apply(ctx) { skyPatch(ctx, 330, 108, 20); },
-  },
-  {
-    id: 'lighthouse-stripe', name: 'Lighthouse stripe', x: 84, y: 205, r: 28,
+    id: 'ball-color', name: 'Soccer ball', x: 195, y: 395, r: 26,
     apply(ctx) {
-      ctx.fillStyle = '#f7f4ec';
-      ctx.fillRect(66, 192, 38, 26);
+      // The same ball, repainted with red patches over the black ones.
+      soccerBall(ctx, 195, 395, 22, '#e5484d');
     },
   },
   {
-    id: 'fish-missing', name: 'Jumping fish', x: 432, y: 372, r: 28,
+    id: 'collar-color', name: 'Dog collar', x: 318, y: 396, r: 22,
     apply(ctx) {
-      ctx.fillStyle = '#2f7fb8';
-      ellipse(ctx, 432, 372, 26, 16);
-      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-      ctx.lineWidth = 2;
+      // The same collar band, repainted blue over the red one, tag kept.
+      ctx.strokeStyle = '#3f7dff';
+      ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(402, 392);
-      ctx.quadraticCurveTo(432, 384, 462, 392);
+      ctx.arc(318, 392, 10, 0.15 * Math.PI, 0.85 * Math.PI);
       ctx.stroke();
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath();
+      ctx.arc(318, 402, 3.5, 0, Math.PI * 2);
+      ctx.fill();
     },
   },
   {
-    id: 'flag-missing', name: 'Boat flag', x: 322, y: 196, r: 24,
+    id: 'flower-color', name: 'Flower colour', x: 60, y: 440, r: 22,
     apply(ctx) {
-      ctx.fillStyle = '#bfe3f2';
-      ctx.fillRect(306, 182, 34, 20);
+      // The same bottom-left flower, repainted purple over white.
+      flower(ctx, 60, 440, 0.9, '#9b5de5', '#ffd166');
     },
-  },
-  {
-    id: 'cloud-extra', name: 'Extra cloud', x: 140, y: 62, r: 30,
-    apply(ctx) { cloud(ctx, 140, 62, 0.7, '#ffffff'); },
   },
 ];
 
-function paintHarbor(ctx, altered, t) {
+function paintPlayground(ctx, altered, t) {
+  // A sunny playground: blue sky, a smiling sun, a city skyline, a big
+  // tree, a red-roofed play structure with a yellow slide, and two
+  // children and their dog playing with a soccer ball on the grass.
   ctx.fillStyle = daySky(ctx);
-  ctx.fillRect(0, 0, 560, 300);
-  const sea = ctx.createLinearGradient(0, 300, 0, 470);
-  sea.addColorStop(0, '#3d8fc4');
-  sea.addColorStop(1, '#1d5f8f');
-  ctx.fillStyle = sea;
-  ctx.fillRect(0, 300, 560, 170);
-  // Sun with rays.
-  sun(ctx, 470, 70, 32, '#f2b705');
-  // Clouds and gulls — a busy morning sky.
-  cloud(ctx, 90, 90, 1, '#ffffff');
-  cloud(ctx, 250, 55, 0.8, '#ffffff');
-  cloud(ctx, 420, 140, 0.9, '#f4fbff');
-  cloud(ctx, 40, 160, 0.6, '#ffffff');
-  cloud(ctx, 520, 40, 0.55, '#ffffff');
-  gull(ctx, 200, 92, '#33506b');
-  gull(ctx, 262, 72, '#33506b');
-  gull(ctx, 330, 108, '#33506b');
-  gull(ctx, 150, 130, '#33506b');
-  // A distant sailboat on the horizon.
-  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 560, 470);
+  // Smiling sun with rays, cheeks and a smile.
+  sun(ctx, 330, 76, 26, '#f2b705');
+  ctx.fillStyle = '#2e2a26';
   ctx.beginPath();
-  ctx.moveTo(500, 292);
-  ctx.lineTo(500, 316);
-  ctx.lineTo(522, 316);
-  ctx.closePath();
+  ctx.arc(322, 72, 3, 0, Math.PI * 2);
+  ctx.arc(338, 72, 3, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = '#7a3b2e';
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(486, 316);
-  ctx.lineTo(528, 316);
-  ctx.lineTo(520, 326);
-  ctx.lineTo(494, 326);
-  ctx.closePath();
-  ctx.fill();
-  // Lighthouse on the left rocks.
-  ctx.fillStyle = '#6b7280';
-  ctx.beginPath();
-  ctx.moveTo(30, 320);
-  ctx.lineTo(70, 285);
-  ctx.lineTo(120, 285);
-  ctx.lineTo(150, 320);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = '#f7f4ec';
-  ctx.fillRect(64, 150, 42, 140);
-  ctx.fillStyle = '#e5534b';
-  ctx.fillRect(64, 168, 42, 18);
-  ctx.fillRect(64, 192, 42, 26);
-  ctx.fillRect(64, 238, 42, 18);
-  ctx.fillStyle = '#33506b';
-  ctx.fillRect(60, 132, 50, 20);
-  ctx.fillStyle = '#ffd94d';
-  ctx.beginPath();
-  ctx.arc(85, 142, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#33506b';
-  ctx.beginPath();
-  ctx.moveTo(60, 132);
-  ctx.lineTo(85, 116);
-  ctx.lineTo(110, 132);
-  ctx.closePath();
-  ctx.fill();
-  // Wooden pier with a beach ball and a bucket.
-  ctx.fillStyle = '#8a6b46';
-  ctx.fillRect(180, 292, 220, 14);
-  ctx.fillStyle = '#6f5433';
-  for (let i = 0; i < 6; i += 1) ctx.fillRect(190 + i * 36, 292, 3, 14);
-  ctx.fillStyle = '#7a5c38';
-  ctx.fillRect(196, 306, 8, 34);
-  ctx.fillRect(376, 306, 8, 34);
-  ctx.fillStyle = '#ff6b4a';
-  ctx.beginPath();
-  ctx.arc(392, 282, 9, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#ffd94d';
-  ctx.beginPath();
-  ctx.arc(392, 282, 9, Math.PI, 0);
-  ctx.fill();
-  ctx.fillStyle = '#3f7dff';
-  ctx.beginPath();
-  ctx.moveTo(392, 273);
-  ctx.lineTo(392, 291);
-  ctx.lineTo(383, 282);
-  ctx.closePath();
-  ctx.fill();
-  // Sailboat.
+  ctx.arc(330, 80, 9, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = '#ff9f9f';
+  ellipse(ctx, 312, 82, 5, 3.5);
+  ellipse(ctx, 348, 82, 5, 3.5);
+  // Clouds, a songbird, a gull and a hot-air balloon.
+  cloud(ctx, 80, 58, 0.9, '#ffffff');
+  cloud(ctx, 210, 42, 0.7, '#ffffff');
+  cloud(ctx, 440, 52, 0.6, '#f4fbff');
+  bird(ctx, 140, 100, '#3f7dff');
+  gull(ctx, 250, 70, '#33506b');
+  balloon(ctx, 485, 100, '#e5534b');
+  sparkle(ctx, 500, 56, 0.8, '#ffffff');
+  // City skyline behind the fence.
+  const towers = [
+    [56, 186, 42, 76, '#8fa8c8'],
+    [106, 168, 34, 94, '#7a9cc0'],
+    [362, 178, 44, 84, '#8fa8c8'],
+    [412, 158, 36, 104, '#7a9cc0'],
+    [454, 192, 40, 70, '#9db4d4'],
+    [500, 172, 34, 90, '#8fa8c8'],
+  ];
+  for (const [tx, ty, tw, th, tc] of towers) {
+    ctx.fillStyle = tc;
+    ctx.fillRect(tx, ty, tw, th);
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
+    for (let wy = ty + 12; wy < ty + th - 8; wy += 18) {
+      for (let wx = tx + 7; wx < tx + tw - 6; wx += 13) {
+        ctx.fillRect(wx, wy, 6, 8);
+      }
+    }
+  }
+  // Green grass.
+  ctx.fillStyle = '#6fce7e';
+  ctx.fillRect(0, 262, 560, 208);
+  ctx.fillStyle = '#57b368';
+  ellipse(ctx, 120, 452, 90, 14);
+  ellipse(ctx, 460, 458, 110, 14);
+  // White picket fence across the lawn.
+  ctx.fillStyle = '#fffdf5';
+  for (let x = 8; x <= 548; x += 26) {
+    ctx.fillRect(x, 232, 14, 32);
+    ctx.beginPath();
+    ctx.moveTo(x, 232);
+    ctx.lineTo(x + 7, 222);
+    ctx.lineTo(x + 14, 232);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillRect(0, 246, 560, 5);
+  // Big tree on the left.
   ctx.fillStyle = '#5b3a1e';
-  ctx.fillRect(303, 196, 4, 100);
+  ctx.fillRect(28, 150, 16, 115);
+  ctx.fillStyle = '#2f9e44';
+  ctx.beginPath();
+  ctx.arc(60, 108, 46, 0, Math.PI * 2);
+  ctx.arc(20, 140, 34, 0, Math.PI * 2);
+  ctx.arc(104, 142, 34, 0, Math.PI * 2);
+  ctx.arc(60, 78, 30, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#35b04a';
+  ctx.beginPath();
+  ctx.arc(44, 96, 20, 0, Math.PI * 2);
+  ctx.arc(84, 128, 16, 0, Math.PI * 2);
+  ctx.fill();
+  // Bushes on the right.
+  ctx.fillStyle = '#2f9e44';
+  ctx.beginPath();
+  ctx.arc(520, 236, 28, 0, Math.PI * 2);
+  ctx.arc(548, 220, 22, 0, Math.PI * 2);
+  ctx.fill();
+  // Play structure: yellow posts, red roof, a little flag.
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(226, 210, 10, 120);
+  ctx.fillRect(324, 210, 10, 120);
   ctx.fillStyle = '#e5534b';
   ctx.beginPath();
-  ctx.moveTo(305, 205);
-  ctx.lineTo(305, 292);
-  ctx.lineTo(352, 292);
+  ctx.moveTo(210, 212);
+  ctx.lineTo(280, 158);
+  ctx.lineTo(350, 212);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#f2f4f8';
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(218, 250, 124, 12);
+  ctx.fillStyle = '#5b3a1e';
+  ctx.fillRect(278, 128, 3, 32);
+  ctx.fillStyle = '#e5534b';
   ctx.beginPath();
-  ctx.moveTo(301, 215);
-  ctx.lineTo(301, 292);
-  ctx.lineTo(262, 292);
+  ctx.moveTo(280, 140);
+  ctx.lineTo(306, 147);
+  ctx.lineTo(280, 154);
   ctx.closePath();
   ctx.fill();
+  // Blue railing along the platform's back.
+  ctx.fillStyle = '#3f7dff';
+  ctx.fillRect(222, 232, 116, 6);
+  for (const rx of [228, 280, 332]) ctx.fillRect(rx, 232, 5, 20);
+  // Yellow slide down to the left.
   ctx.fillStyle = '#ffd166';
   ctx.beginPath();
-  ctx.moveTo(307, 182);
-  ctx.lineTo(336, 190);
-  ctx.lineTo(307, 200);
+  ctx.moveTo(222, 258);
+  ctx.lineTo(234, 268);
+  ctx.lineTo(184, 340);
+  ctx.lineTo(170, 330);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#7a3b2e';
+  ctx.strokeStyle = '#e8b96a';
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(252, 292);
-  ctx.lineTo(362, 292);
-  ctx.lineTo(344, 318);
-  ctx.lineTo(270, 318);
-  ctx.closePath();
-  ctx.fill();
-  // Jumping fish, buoy and wave lines.
-  const bob = Math.sin(t * 2) * 3;
-  ctx.fillStyle = '#ff8c42';
-  ctx.beginPath();
-  ctx.ellipse(432, 372 + bob, 16, 8, -0.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(446, 364 + bob);
-  ctx.lineTo(458, 356 + bob);
-  ctx.lineTo(454, 372 + bob);
-  ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(222, 258);
+  ctx.lineTo(170, 330);
+  ctx.moveTo(234, 268);
+  ctx.lineTo(184, 340);
+  ctx.stroke();
+  // Red stairs up on the right.
   ctx.fillStyle = '#e5534b';
+  const steps = [[352, 318], [346, 304], [340, 290], [334, 276], [328, 262]];
+  for (const [sx, sy] of steps) ctx.fillRect(sx, sy, 26, 10);
+  ctx.fillStyle = '#fffdf5';
+  for (const [sx, sy] of steps) ctx.fillRect(sx, sy, 26, 3);
+  // Boy in blue, running after the ball.
+  ctx.strokeStyle = '#f2c9a0';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.arc(500, 402 + bob * 0.5, 12, 0, Math.PI * 2);
+  ctx.moveTo(88, 334);
+  ctx.lineTo(70, 350);
+  ctx.moveTo(122, 334);
+  ctx.lineTo(138, 320);
+  ctx.moveTo(96, 380);
+  ctx.lineTo(82, 402);
+  ctx.moveTo(114, 380);
+  ctx.lineTo(130, 398);
+  ctx.stroke();
+  ctx.fillStyle = '#3f7dff';
+  ctx.beginPath();
+  ctx.roundRect(86, 326, 38, 42, 10);
   ctx.fill();
-  ctx.fillStyle = '#f7f4ec';
-  ctx.fillRect(490, 398 + bob * 0.5, 20, 7);
-  ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  sparkle(ctx, 105, 344, 1.1, '#ffffff');
+  ctx.fillStyle = '#2f5fc4';
+  ctx.fillRect(88, 366, 34, 14);
+  ctx.fillStyle = '#3f7dff';
+  ellipse(ctx, 80, 404, 10, 6);
+  ellipse(ctx, 132, 400, 10, 6);
+  ctx.fillStyle = '#f2c9a0';
+  ctx.beginPath();
+  ctx.arc(105, 302, 23, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5b3a1e';
+  ctx.beginPath();
+  ctx.arc(105, 300, 23, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(90, 282, 8, 0, Math.PI * 2);
+  ctx.arc(105, 278, 9, 0, Math.PI * 2);
+  ctx.arc(120, 283, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(97, 300, 2.5, 0, Math.PI * 2);
+  ctx.arc(113, 300, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
   ctx.lineWidth = 2;
-  for (const [wx, wy, wl] of [[60, 350, 70], [180, 390, 90], [300, 430, 80], [430, 440, 70], [90, 440, 60]]) {
+  ctx.beginPath();
+  ctx.arc(105, 306, 7, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = '#ff9f9f';
+  ellipse(ctx, 92, 308, 4, 3);
+  ellipse(ctx, 118, 308, 4, 3);
+  // Girl in pink, chasing the dog.
+  ctx.strokeStyle = '#f2c9a0';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(432, 332);
+  ctx.lineTo(416, 348);
+  ctx.moveTo(464, 332);
+  ctx.lineTo(480, 318);
+  ctx.moveTo(438, 372);
+  ctx.lineTo(428, 396);
+  ctx.moveTo(458, 372);
+  ctx.lineTo(470, 394);
+  ctx.stroke();
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.moveTo(430, 324);
+  ctx.lineTo(466, 324);
+  ctx.lineTo(478, 372);
+  ctx.lineTo(418, 372);
+  ctx.closePath();
+  ctx.fill();
+  flower(ctx, 448, 344, 0.5, '#ffffff', '#ffd166');
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 426, 398, 10, 6);
+  ellipse(ctx, 472, 396, 10, 6);
+  ctx.fillStyle = '#f2c9a0';
+  ctx.beginPath();
+  ctx.arc(448, 298, 23, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#5b3a1e';
+  ctx.beginPath();
+  ctx.arc(448, 296, 23, Math.PI, 0);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(470, 292, 9, 0, Math.PI * 2);
+  ctx.arc(474, 308, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.moveTo(428, 278);
+  ctx.lineTo(414, 268);
+  ctx.lineTo(414, 288);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(428, 278);
+  ctx.lineTo(442, 268);
+  ctx.lineTo(442, 288);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(428, 278, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(440, 296, 2.5, 0, Math.PI * 2);
+  ctx.arc(456, 296, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(448, 302, 7, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = '#ff9f9f';
+  ellipse(ctx, 435, 304, 4, 3);
+  ellipse(ctx, 461, 304, 4, 3);
+  // Their brown-and-white dog, tongue out, red collar.
+  ctx.fillStyle = '#fffdf5';
+  ellipse(ctx, 300, 408, 30, 16);
+  ctx.fillStyle = '#b07a45';
+  ellipse(ctx, 312, 402, 12, 8);
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(278, 420, 6, 12);
+  ctx.fillRect(292, 420, 6, 12);
+  ctx.fillRect(308, 420, 6, 12);
+  ctx.fillRect(320, 420, 6, 12);
+  ctx.save();
+  ctx.translate(262, 392);
+  ctx.rotate(-0.6);
+  ellipse(ctx, 0, 0, 9, 4);
+  ctx.restore();
+  ctx.beginPath();
+  ctx.arc(328, 390, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#b07a45';
+  ellipse(ctx, 318, 384, 5, 9);
+  ellipse(ctx, 338, 384, 5, 9);
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(340, 388, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(332, 386, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 334, 400, 4, 6);
+  ctx.strokeStyle = '#e5534b';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(318, 392, 10, 0.15 * Math.PI, 0.85 * Math.PI);
+  ctx.stroke();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(318, 402, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  // The soccer ball between the boy and the dog.
+  soccerBall(ctx, 195, 395, 22, '#2e2a26');
+  // Flowers along the bottom, and a fluttering butterfly.
+  flower(ctx, 60, 440, 0.9, '#ffffff', '#ffd166');
+  flower(ctx, 130, 448, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 480, 445, 0.9, '#ffd166', '#ff6b4a');
+  flower(ctx, 520, 432, 0.8, '#ffffff', '#ff8fc7');
+  flower(ctx, 25, 452, 0.7, '#ff8fc7', '#ffd166');
+  flower(ctx, 350, 452, 0.8, '#ffffff', '#ffd166');
+  butterfly(ctx, 380, 170, 0.9, '#ffd166', t);
+  ctx.strokeStyle = '#2f9e44';
+  ctx.lineWidth = 2;
+  for (const [gx, gy] of [[90, 460], [250, 455], [420, 458]]) {
     ctx.beginPath();
-    ctx.moveTo(wx, wy);
-    ctx.quadraticCurveTo(wx + wl / 2, wy - 7, wx + wl, wy);
+    ctx.moveTo(gx - 6, gy);
+    ctx.quadraticCurveTo(gx, gy - 8, gx + 6, gy);
     ctx.stroke();
   }
-  if (altered) for (const d of HARBOR_DIFFS) d.apply(ctx, t);
+  if (altered) for (const d of PLAYGROUND_DIFFS) d.apply(ctx, t);
 }
 
 // --- Level 2: Sunny Street Market ----------------------------------------
@@ -2797,18 +3084,18 @@ function paintPool(ctx, altered, t) {
 }
 
 const PAINTERS = [
-  paintHarbor, paintMarket, paintMeadow, paintGarden, paintBeach,
+  paintPlayground, paintMarket, paintMeadow, paintGarden, paintBeach,
   paintFarm, paintCandy, paintButterflyMeadow, paintToy, paintFruit, paintPool,
 ];
 const DIFF_SETS = [
-  HARBOR_DIFFS, MARKET_DIFFS, MEADOW_DIFFS, GARDEN_DIFFS, BEACH_DIFFS,
+  PLAYGROUND_DIFFS, MARKET_DIFFS, MEADOW_DIFFS, GARDEN_DIFFS, BEACH_DIFFS,
   FARM_DIFFS, CANDY_DIFFS, BUTTERFLY_DIFFS, TOY_DIFFS, FRUIT_DIFFS, POOL_DIFFS,
 ];
 
 // ------------------------------------------------------------------ world
 
 export function diffsOf(levelIndex) {
-  return DIFF_SETS[levelIndex] ?? HARBOR_DIFFS;
+  return DIFF_SETS[levelIndex] ?? PLAYGROUND_DIFFS;
 }
 
 export function createWorld(random) {

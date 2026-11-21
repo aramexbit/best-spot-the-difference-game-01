@@ -3,6 +3,8 @@
 # v2: eleven scenes, 91 differences — the output rules are unchanged.
 # v3: main.ts clears only the output directory's contents, never the
 # directory itself (the grader mounts it, so removing it throws).
+# v4: the opening hunt is a sunny playground; the HUD is a wooden sign,
+# a timer pill and a bottom bar — the output rules are unchanged.
 out/
 node_modules/
 .DS_Store

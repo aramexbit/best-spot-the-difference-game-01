@@ -6,21 +6,22 @@
 
 Two pictures. Almost the same. Find what changed — before the clock runs out.
 
-An original spot-the-difference game built for the [make.fun bounty](https://make.fun/c/best-spot-the-difference-game-20261121-0451) (best spot the difference game, $50). Every scene is drawn procedurally on canvas — vector shapes, no image files, no network requests — so the two panels are pixel-identical except for the differences planted on purpose. Eleven sunny scenes in a cheerful palette: bright blue sky, sunny yellow, coral, mint and warm cream. Each scene is packed with objects, animals, decorations and small activities — busy frames worth studying.
+An original spot-the-difference game built for the [make.fun bounty](https://make.fun/c/best-spot-the-difference-game-20261121-0451) (best spot the difference game, $50). Every scene is drawn procedurally on canvas — vector shapes, no image files, no network requests — so the two panels are pixel-identical except for the differences planted on purpose. Eleven sunny scenes in a cheerful palette: bright blue sky, sunny yellow, coral, mint and warm cream. Each scene is packed with objects, animals, decorations and small activities — busy frames worth studying. v4 opens on a sunny playground (a boy in blue, a girl in pink, their dog, a yellow slide under a red roof) under the concept's wooden-sign HUD: a timer pill, a "Found • To Go" strip and a wooden "Click the differences!" bar.
 
 ## How to play
 
-- **Click** a difference on either picture: a gold ring snaps around it with a chime, and your combo grows.
+- **Click** a difference on either picture: a red ring snaps around it with a chime, and your combo grows.
 - **Wrong click**: a small shake, the combo breaks, and 5 seconds come off the clock.
 - **Hint** (button or `H`): 3 per level, 8s cooldown — one hiding difference pulses blue.
-- **Timer bar**: clear the level before it empties for a time bonus.
+- **Timer pill**: clear the level before it empties for a time bonus.
+- **Pause** (orange circle or `P`): freezes the clock mid-hunt.
 - **Keys**: `H` hint · `N` next level · `P` pause · `R` retry · `M` mute · `Esc` back · `←` `→` move between level cards.
 
 ## The eleven hunts
 
 | Level | Scene | Differences | Time |
 | --- | --- | --- | --- |
-| 1 | Harbor Morning ⚓ | 7 — sun rays, sail colour, a missing gull… | 2:30 |
+| 1 | Sunny Playground 🛝 | 7 — bird colour, sun's sunglasses, balloon colour… | 2:30 |
 | 2 | Sunny Street Market 🛍️ | 8 — sun rays, lantern colour, a missing cat… | 2:30 |
 | 3 | Sunny Meadow 🌳 | 10 — tent colour, owl, campfire flame… | 3:00 |
 | 4 | Rainbow Garden 🌈 | 8 — rainbow band, a missing sunflower, a bee… | 2:30 |
@@ -47,9 +48,9 @@ No build step, no dependencies: `game/` is plain static files.
 
 Append `?shot=…&seed=7` to stage one of four fixed frames (the same seed always gives the same frame):
 
-- `?shot=cover` — Candy Town mid-hunt, 4 of 9 found
+- `?shot=cover` — Sunny Playground mid-hunt, 4 of 7 found
 - `?shot=play` — Rainbow Garden mid-hunt, 3 of 8 found
-- `?shot=end` — Harbor Morning cleared, score and time bonus
+- `?shot=end` — Sunny Playground cleared, score and time bonus
 - `?shot=levels` — the level-select grid, five levels unlocked
 
 ## Layout
@@ -61,7 +62,7 @@ Append `?shot=…&seed=7` to stage one of four fixed frames (the same seed alway
 - `game/src/render.js` — HUD, panels, found-rings, title / select / clear screens
 - `game/src/input.js` — mouse + keyboard (arrow keys move between level cards)
 - `game/src/sound.js` — WebAudio effects (no audio files)
-- `game/src/shots.js` — the four screenshot scenes (`?shot=cover|play|end|levels`)
+- `game/src/shots.js` — the four screenshot scenes (`?shot=cover|play|end|levels`; v4: the cover stages the playground at 4 of 7)
 - `game/src/random.js` — deterministic random source (`?seed=N`)
 - `main.ts` — the entry program: copies `game/` + `screenshots/` and writes `dossier.json`
 - `shots.json` — the screenshot list for the entry

@@ -1,7 +1,8 @@
 // The renderer: everything the player sees, painted on one canvas.
-// The HUD (counter, score, timer bar, hint button), the two picture
-// panels with their found-markers and hint pulse, the floating score
-// popups, and the title / level-select / clear / over / done screens.
+// The HUD (wooden sign, timer pill, found strip, hint pill, bottom bar,
+// pause circle), the two picture panels with their found-markers and
+// hint pulse, the floating score popups, and the title / level-select /
+// clear / over / done screens.
 //
 // The game is drawn in a fixed 1280x720 logical space and scaled to the
 // window, so the screenshots are the same frame at any window size.
@@ -49,6 +50,8 @@ export const LEVEL_CARDS = [
 export const NEXT_BUTTON = { x: 490, y: 520, w: 300, h: 64 };
 export const RETRY_BUTTON = { x: 490, y: 500, w: 300, h: 64 };
 export const START_BUTTON = { x: 440, y: 520, w: 400, h: 70 };
+// The orange pause circle in the HUD's top-right corner (v4).
+export const PAUSE_BUTTON = { x: 1200, y: 13, w: 52, h: 52 };
 
 // A warm light veil for the end screens, so the bright panels behind
 // them stay visible instead of going dark.
@@ -90,28 +93,19 @@ export function createRenderer(canvas) {
   panelB.height = PANEL.height;
 
   function drawFoundRing(pctx, x, y, pulse) {
+    // v4: the concept's bold red circle, with a thin white inner ring
+    // so it stays readable on busy art.
     const r = 26 + (pulse ? Math.sin(pulse * 6) * 2 : 0);
     pctx.save();
-    pctx.strokeStyle = PALETTE.ring;
-    pctx.lineWidth = 5;
-    pctx.shadowColor = 'rgba(255,209,102,0.9)';
-    pctx.shadowBlur = 12;
+    pctx.strokeStyle = PALETTE.foundRing;
+    pctx.lineWidth = 6;
     pctx.beginPath();
     pctx.arc(x, y, r, 0, Math.PI * 2);
     pctx.stroke();
-    pctx.shadowBlur = 0;
-    pctx.strokeStyle = PALETTE.ringFound;
-    pctx.lineWidth = 2.5;
+    pctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    pctx.lineWidth = 2;
     pctx.beginPath();
     pctx.arc(x, y, r - 7, 0, Math.PI * 2);
-    pctx.stroke();
-    pctx.strokeStyle = '#ffffff';
-    pctx.lineWidth = 4;
-    pctx.lineCap = 'round';
-    pctx.beginPath();
-    pctx.moveTo(x - 9, y);
-    pctx.lineTo(x - 3, y + 7);
-    pctx.lineTo(x + 10, y - 7);
     pctx.stroke();
     pctx.restore();
   }
@@ -188,63 +182,144 @@ export function createRenderer(canvas) {
     text(ctx, 'CHANGED — SPOT THE DIFFERENCES', PANEL_RIGHT.x + 14, PANEL_RIGHT.y - 16, 15, PALETTE.muted, 'bold');
   }
 
+  // A wooden plank: brown fill, dark border, lighter top edge, nail dots.
+  function woodPlank(x, y, w, h, r) {
+    ctx.fillStyle = PALETTE.wood;
+    roundRect(ctx, x, y, w, h, r);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.woodDark;
+    ctx.lineWidth = 3;
+    roundRect(ctx, x, y, w, h, r);
+    ctx.stroke();
+    ctx.fillStyle = PALETTE.woodLight;
+    roundRect(ctx, x + 6, y + 4, w - 12, 5, 2);
+    ctx.fill();
+    ctx.fillStyle = PALETTE.woodDark;
+    for (const [nx, ny] of [[x + 14, y + h / 2], [x + w - 14, y + h / 2]]) {
+      ctx.beginPath();
+      ctx.arc(nx, ny, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   function drawHud(world, best, screen) {
     const state = world.state;
-    const lvl = world.level();
     // On the clear/done screens totalScore already includes this level's
     // score; while playing it does not, so add the running score then.
     const runningTotal = (screen === SCREEN_CLEAR || screen === SCREEN_DONE)
       ? state.totalScore
       : state.totalScore + state.score;
-    // Top bar.
-    ctx.fillStyle = PALETTE.hudPanel;
-    roundRect(ctx, 24, 12, 1232, 76, 12);
-    ctx.fill();
-    ctx.strokeStyle = PALETTE.hudEdge;
-    ctx.lineWidth = 1.5;
-    roundRect(ctx, 24, 12, 1232, 76, 12);
-    ctx.stroke();
-    text(ctx, 'SPOT THE DIFFERENCE', 44, 34, 24, PALETTE.text);
-    text(ctx, `${lvl.name}  ·  Level ${state.levelIndex + 1} of ${LEVELS.length}`, 44, 64, 15, PALETTE.muted, 'normal');
-    // Counter — the heart of the game, big and central.
     const total = world.diffs().length;
     const found = state.found.length;
-    text(ctx, `FOUND  ${found} / ${total}`, 640, 34, 30, found === total ? PALETTE.good : PALETTE.accent, 'bold', 'center');
-    text(ctx, `${total - found} still hiding`, 640, 64, 14, PALETTE.muted, 'normal', 'center');
-    // Score.
-    text(ctx, `SCORE  ${state.score}`, 1010, 34, 22, PALETTE.text, 'bold', 'right');
-    text(ctx, `Best ${Math.max(best, runningTotal)}`, 1010, 64, 13, PALETTE.muted, 'normal', 'right');
-    // Timer bar, in the strip between the panels and the message line.
-    const barX = 44;
-    const barY = 600;
-    const barW = 760;
-    const frac = Math.max(0, state.timeLeft / state.timeTotal);
-    ctx.fillStyle = '#eadfc3';
-    roundRect(ctx, barX, barY, barW, 12, 6);
+    const remaining = total - found;
+
+    // Title, top-left: a magnifier and two bubbly lines (v4).
+    ctx.save();
+    ctx.font = `bold 30px ${FONT}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔍', 44, 30);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = PALETTE.pillDark;
+    ctx.strokeText('Spot the', 84, 30);
+    ctx.fillStyle = '#ffb703';
+    ctx.fillText('Spot the', 84, 30);
+    ctx.strokeText('Difference', 44, 62);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('Difference', 44, 62);
+    ctx.restore();
+
+    // Wooden "Find all N differences!" sign, centred across the top.
+    const sign = HUD.sign;
+    woodPlank(sign.x, sign.y, sign.w, sign.h, 12);
+    const s1 = 'Find all ';
+    const s2 = String(total);
+    const s3 = ' differences!';
+    ctx.font = `bold 24px ${FONT}`;
+    ctx.textBaseline = 'middle';
+    const w1 = ctx.measureText(s1).width;
+    const w2 = ctx.measureText(s2).width;
+    const w3 = ctx.measureText(s3).width;
+    const tx = sign.x + (sign.w - w1 - w2 - w3) / 2;
+    const ty = sign.y + sign.h / 2;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(s1, tx, ty);
+    ctx.fillStyle = '#ffd166';
+    ctx.fillText(s2, tx + w1, ty);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(s3, tx + w1 + w2, ty);
+
+    // Dark blue timer + counter pill, top-right.
+    const pill = HUD.pill;
+    ctx.fillStyle = PALETTE.pill;
+    roundRect(ctx, pill.x, pill.y, pill.w, pill.h, 25);
     ctx.fill();
-    const low = frac < 0.25;
-    ctx.fillStyle = low ? PALETTE.bad : frac < 0.5 ? PALETTE.accent : PALETTE.good;
-    if (frac > 0) {
-      roundRect(ctx, barX, barY, barW * frac, 12, 6);
-      ctx.fill();
-    }
-    text(ctx, `⏱ ${formatTime(state.timeLeft)}`, barX + barW + 16, barY + 6, 17, low ? PALETTE.bad : PALETTE.text);
-    // Hint button.
+    ctx.strokeStyle = PALETTE.pillDark;
+    ctx.lineWidth = 2;
+    roundRect(ctx, pill.x, pill.y, pill.w, pill.h, 25);
+    ctx.stroke();
+    text(ctx, `⏱ ${formatTime(state.timeLeft)}   |   🔍 ${found}/${total}`, pill.x + pill.w / 2, pill.y + pill.h / 2, 22, '#ffffff', 'bold', 'center');
+    // Green "N Found • M To Go!" strip under the pill.
+    const strip = HUD.strip;
+    ctx.fillStyle = PALETTE.good;
+    roundRect(ctx, strip.x, strip.y, strip.w, strip.h, 11);
+    ctx.fill();
+    text(ctx, `✓ ${found} Found  •  ${remaining} To Go!`, strip.x + strip.w / 2, strip.y + strip.h / 2 + 1, 14, '#ffffff', 'bold', 'center');
+
+    // Orange pause circle, top-right beside the pill.
+    const pb = HUD.pauseButton;
+    ctx.fillStyle = PALETTE.pauseOrange;
+    ctx.beginPath();
+    ctx.arc(pb.x + pb.w / 2, pb.y + pb.h / 2, pb.w / 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(pb.x + pb.w / 2, pb.y + pb.h / 2, pb.w / 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(pb.x + 19, pb.y + 15, 5, 22);
+    ctx.fillRect(pb.x + 28, pb.y + 15, 5, 22);
+
+    // Hint pill, bottom-left.
     const hb = HUD.hintButton;
     const disabled = state.hintsLeft <= 0 || state.hintCooldown > 0;
-    ctx.fillStyle = disabled ? PALETTE.buttonDisabled : PALETTE.button;
-    roundRect(ctx, hb.x, hb.y, hb.w, hb.h, 12);
+    ctx.fillStyle = disabled ? PALETTE.buttonDisabled : '#35a7ff';
+    roundRect(ctx, hb.x, hb.y, hb.w, hb.h, 28);
     ctx.fill();
+    ctx.strokeStyle = disabled ? PALETTE.buttonDisabled : '#1d7fd4';
+    ctx.lineWidth = 2;
+    roundRect(ctx, hb.x, hb.y, hb.w, hb.h, 28);
+    ctx.stroke();
     const label = state.hintCooldown > 0
       ? `Hint… ${Math.ceil(state.hintCooldown)}s`
       : `💡 Hint  (${state.hintsLeft} left)`;
     text(ctx, label, hb.x + hb.w / 2, hb.y + hb.h / 2, 17, '#ffffff', 'bold', 'center');
     text(ctx, 'or press H', hb.x + hb.w / 2, hb.y + hb.h + 14, 12, PALETTE.muted, 'normal', 'center');
-    // Combo flame.
+
+    // Wooden "Click the differences!" bar along the bottom.
+    const bar = HUD.bottomBar;
+    woodPlank(bar.x, bar.y, bar.w, bar.h, 14);
+    text(ctx, '★  Click the differences!  ★', bar.x + bar.w / 2, bar.y + bar.h / 2, 24, '#ffffff', 'bold', 'center');
+
+    // Cream score chip, bottom-right.
+    const chip = HUD.scoreChip;
+    ctx.fillStyle = PALETTE.hudPanel;
+    roundRect(ctx, chip.x, chip.y, chip.w, chip.h, 12);
+    ctx.fill();
+    ctx.strokeStyle = PALETTE.hudEdge;
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, chip.x, chip.y, chip.w, chip.h, 12);
+    ctx.stroke();
+    text(ctx, `SCORE  ${state.score}`, chip.x + chip.w / 2, chip.y + 19, 20, PALETTE.text, 'bold', 'center');
+    text(ctx, `Best ${Math.max(best, runningTotal)}`, chip.x + chip.w / 2, chip.y + 42, 13, PALETTE.muted, 'normal', 'center');
+
+    // Combo flame, left of the message line.
     if (state.combo >= 2) {
-      text(ctx, `🔥 COMBO x${state.combo}`, 44, MESSAGE_Y + 46, 20, '#ff9f43', 'bold');
+      text(ctx, `🔥 COMBO x${state.combo}`, 190, MESSAGE_Y + 46, 20, '#ff9f43', 'bold');
     }
-    // Message strip.
+    // Message strip, below the bottom bar.
     if (state.messageT > 0) {
       ctx.globalAlpha = Math.min(1, state.messageT);
       text(ctx, state.message, 640, MESSAGE_Y + 46, 18, PALETTE.text, 'normal', 'center');
@@ -269,7 +344,7 @@ export function createRenderer(canvas) {
     text(ctx, '🔍  SPOT THE DIFFERENCE', 640, 150, 52, PALETTE.text, 'bold', 'center');
     text(ctx, 'Two pictures. Almost the same. Find what changed.', 640, 205, 22, PALETTE.muted, 'normal', 'center');
     text(ctx, 'Click a difference on either picture  ·  H hint  ·  P pause  ·  N next level', 640, 248, 17, PALETTE.muted, 'normal', 'center');
-    // A miniature preview: the harbor scene, both panels, mid-hunt.
+    // A miniature preview: the playground scene, both panels, mid-hunt (v4).
     drawPanels(world);
     blitPanels(world);
     text(ctx, `${LEVELS.length} sunny hand-drawn scenes  ·  ${TOTAL_DIFFS} hidden differences  ·  combos, hints & a race against the clock`, 640, 640, 17, PALETTE.muted, 'normal', 'center');

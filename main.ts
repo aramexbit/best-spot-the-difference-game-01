@@ -1,5 +1,12 @@
 // Spot the Difference — entry program (Node 22, standard library only).
 //
+// v4: the opening level is a sunny playground, and the HUD wears the
+// concept's wooden sign, timer pill and bottom bar. The screenshots are
+// the playground at 4/7, the garden at 3/8, the playground cleared, and
+// the level grid — all byte-different from v3. The entry program itself
+// is unchanged since v3 (clear only the output directory's contents,
+// never the directory itself — the grader mounts it).
+//
 // The game lives in game/ as plain static files a desktop browser loads
 // offline (game/index.html plus its ES modules, no library, no network
 // request): eleven sunny procedural scenes, 91 planted differences.

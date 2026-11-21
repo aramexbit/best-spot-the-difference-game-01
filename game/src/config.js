@@ -10,6 +10,10 @@
 // v2: eleven sunny scenes, 91 planted differences, and a cheerful light
 // palette — bright sky blue, sunny yellow, coral, mint and warm cream —
 // so every frame reads bright and friendly at a glance.
+// v4: the opening hunt is a sunny playground (boy, girl, dog, slide and
+// a smiling sun), and the HUD wears the concept's wooden sign, a dark
+// blue timer pill and a wooden "Click the differences!" bar. The pause
+// circle and the hint pill are clickable rects too — see main.js.
 
 export const FIELD = { width: 1280, height: 720 };
 
@@ -24,8 +28,24 @@ export const PANEL_LEFT = { x: 40, y: 118 };
 export const PANEL_RIGHT = { x: 680, y: 118 };
 export const PANEL_GAP = 80;
 
-export const HUD = { height: 96, hintButton: { x: 1052, y: 18, w: 188, h: 60 } };
-export const MESSAGE_Y = 612;
+export const HUD = {
+  height: 96,
+  // Bottom-left, under the left panel, like the concept's Hint pill.
+  hintButton: { x: 24, y: 612, w: 150, h: 56 },
+  // Orange pause circle, top-right beside the timer pill.
+  pauseButton: { x: 1200, y: 13, w: 52, h: 52 },
+  // Wooden "Find all N differences!" sign, centred across the top.
+  sign: { x: 440, y: 14, w: 400, h: 50 },
+  // Dark blue timer + counter pill, top-right.
+  pill: { x: 880, y: 14, w: 300, h: 50 },
+  // Green "N Found • M To Go!" strip under the pill.
+  strip: { x: 900, y: 68, w: 260, h: 22 },
+  // Wooden "Click the differences!" bar along the bottom.
+  bottomBar: { x: 300, y: 612, w: 680, h: 56 },
+  // Cream score chip, bottom-right.
+  scoreChip: { x: 1000, y: 612, w: 256, h: 56 },
+};
+export const MESSAGE_Y = 650;
 
 // Scoring: a find is worth 100, plus 25 for each step of the combo
 // chain; a wrong click breaks the chain and costs 5 seconds.
@@ -44,7 +64,7 @@ export const HINT = { perLevel: 3, pulseSeconds: 2.6, cooldownSeconds: 8 };
 // Seconds on the clock when a level starts. The bar drains in real time;
 // finding everything before it empties clears the level.
 export const LEVELS = [
-  { name: 'Harbor Morning', sub: 'Level 1 — Easy · 7 differences', seconds: 150, diffs: 7, emoji: '⚓' },
+  { name: 'Sunny Playground', sub: 'Level 1 — Easy · 7 differences', seconds: 150, diffs: 7, emoji: '🛝' },
   { name: 'Sunny Street Market', sub: 'Level 2 — Easy · 8 differences', seconds: 150, diffs: 8, emoji: '🛍️' },
   { name: 'Sunny Meadow', sub: 'Level 3 — Medium · 10 differences', seconds: 180, diffs: 10, emoji: '🌳' },
   { name: 'Rainbow Garden', sub: 'Level 4 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🌈' },
@@ -76,6 +96,14 @@ export const PALETTE = {
   bad: '#e5484d',
   ring: '#ffb703',
   ringFound: '#1faa5c',
+  // v4: the concept's wood, pill blue and found-ring red.
+  wood: '#a06a35',
+  woodDark: '#6f4520',
+  woodLight: '#c08a4e',
+  pill: '#155a8a',
+  pillDark: '#0f4266',
+  foundRing: '#e5484d',
+  pauseOrange: '#ff9f1c',
   hintPulse: '#2196f3',
   panelEdge: '#ffffff',
   panelShadow: 'rgba(120,80,20,0.25)',
