@@ -7,9 +7,11 @@
 //   cover  — Sunny Playground mid-hunt: 4 of 7 found, the concept's own
 //            frame (bird, sun, balloon and ball ringed in red; the flag,
 //            the collar and the flower still hiding; 3 remaining)
-//   play   — Rainbow Garden mid-hunt: 3 of 8 found, a different scene
+//   play   — Firefly Night Garden mid-hunt: 4 of 7 found (lantern, moon,
+//            window and cat ringed in red; the firefly, the flower and
+//            the star still hiding; 3 remaining) — the new night scene
 //   end    — Sunny Playground cleared: score, time bonus, next-level button
-//   levels — the level-select screen, five levels unlocked
+//   levels — the level-select screen, twelve cards, five levels unlocked
 // Any other name stages the cover.
 
 import { SCREEN_CLEAR, SCREEN_PLAY, SCREEN_SELECT } from './world.js';
@@ -31,8 +33,8 @@ function stageMidHunt(world, levelIndex, foundIds, score, combo, timeLeft) {
 
 export function stageShot(name, world) {
   if (name === 'play') {
-    // Rainbow Garden, 3 of 8 found (100 + 125 + 150 = 375).
-    return stageMidHunt(world, 3, ['rainbow-band', 'sunflower-missing', 'birdhouse-door'], 375, 3, 121);
+    // Firefly Night Garden, 4 of 7 found (100 + 125 + 150 + 175 = 550).
+    return stageMidHunt(world, 11, ['lantern-color', 'moon-phase', 'window-light', 'cat-position'], 550, 4, 105);
   }
   if (name === 'end') {
     world.startLevel(0);

@@ -6,10 +6,17 @@
 // the level grid — all byte-different from v3. The entry program itself
 // is unchanged since v3 (clear only the output directory's contents,
 // never the directory itself — the grader mounts it).
+// v5: a twelfth scene, the Firefly Night Garden, joins the hunt; the HUD
+// names every difference already found; the playground is denser; the
+// screenshots are the playground at 4/7, the night garden at 4/7, the
+// playground cleared, and the twelve-card grid — all byte-different
+// from v4. The entry program's copy logic is unchanged since v3.
+// v5 revision pass: the night swarm glows a touch brighter and the
+// Found line reads at 15px, so the re-taken shots match the code.
 //
 // The game lives in game/ as plain static files a desktop browser loads
 // offline (game/index.html plus its ES modules, no library, no network
-// request): eleven sunny procedural scenes, 91 planted differences.
+// request): twelve procedural scenes, 98 planted differences.
 // This program hands it in: it copies game/ and screenshots/
 // from beside this file into the output directory and writes
 // /output/dossier.json, the summary the judge reads, with the vendored

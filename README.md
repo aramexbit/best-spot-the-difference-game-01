@@ -2,11 +2,11 @@
 [![Rank](https://make.fun/badge/best-spot-the-difference-game-20261121-0451/aramexbit/best-spot-the-difference-game-01/rank.svg)](https://make.fun/c/best-spot-the-difference-game-20261121-0451)
 [![Reward](https://make.fun/badge/best-spot-the-difference-game-20261121-0451/aramexbit/best-spot-the-difference-game-01/reward.svg)](https://make.fun/c/best-spot-the-difference-game-20261121-0451)
 
-# Spot the Difference — 11 Sunny Scenes
+# Spot the Difference — 12 Scenes, Sunny Days & One Night Garden
 
 Two pictures. Almost the same. Find what changed — before the clock runs out.
 
-An original spot-the-difference game built for the [make.fun bounty](https://make.fun/c/best-spot-the-difference-game-20261121-0451) (best spot the difference game, $50). Every scene is drawn procedurally on canvas — vector shapes, no image files, no network requests — so the two panels are pixel-identical except for the differences planted on purpose. Eleven sunny scenes in a cheerful palette: bright blue sky, sunny yellow, coral, mint and warm cream. Each scene is packed with objects, animals, decorations and small activities — busy frames worth studying. v4 opens on a sunny playground (a boy in blue, a girl in pink, their dog, a yellow slide under a red roof) under the concept's wooden-sign HUD: a timer pill, a "Found • To Go" strip and a wooden "Click the differences!" bar.
+An original spot-the-difference game built for the [make.fun bounty](https://make.fun/c/best-spot-the-difference-game-20261121-0451) (best spot the difference game, $50). Every scene is drawn procedurally on canvas — vector shapes, no image files, no network requests — so the two panels are pixel-identical except for the differences planted on purpose. Eleven sunny scenes in a cheerful palette: bright blue sky, sunny yellow, coral, mint and warm cream — plus a twelfth hunt after dark, the Firefly Night Garden, where paper lanterns glow and fireflies drift over the lawn. Each scene is packed with objects, animals, decorations and small activities — busy frames worth studying. v4 opens on a sunny playground (a boy in blue, a girl in pink, their dog, a yellow slide under a red roof) under the concept's wooden-sign HUD: a timer pill, a "Found • To Go" strip and a wooden "Click the differences!" bar. v5 names every difference already found under the panels, so the hunt reads at a glance.
 
 ## How to play
 
@@ -32,8 +32,9 @@ An original spot-the-difference game built for the [make.fun bounty](https://mak
 | 9 | Toy Workshop 🧸 | 8 — teddy bow, block letter, a missing chimney puff… | 2:30 |
 | 10 | Fruit Festival 🍓 | 9 — watermelon slice, grape bunch, juice sign… | 2:30 |
 | 11 | Pool Party 🏊 | 8 — duck float, donut sprinkles, umbrella stripe… | 2:30 |
+| 12 | Firefly Night Garden 🌙 | 7 — lantern colour, moon phase, a window light… | 2:30 |
 
-91 differences in all. Clear a level to unlock the next; clear all eleven to become Master Spotter. The butterflies flutter, the campfire flickers and the pool sparkles — the scenes stay gently alive while you hunt.
+98 differences in all. Clear a level to unlock the next; clear all twelve to become Master Spotter. The butterflies flutter, the campfire flickers and the pool sparkles — the scenes stay gently alive while you hunt. After dark, the fireflies blink and drift, and the lanterns glow.
 
 ## Play it
 
@@ -49,17 +50,17 @@ No build step, no dependencies: `game/` is plain static files.
 Append `?shot=…&seed=7` to stage one of four fixed frames (the same seed always gives the same frame):
 
 - `?shot=cover` — Sunny Playground mid-hunt, 4 of 7 found
-- `?shot=play` — Rainbow Garden mid-hunt, 3 of 8 found
+- `?shot=play` — Firefly Night Garden mid-hunt, 4 of 7 found
 - `?shot=end` — Sunny Playground cleared, score and time bonus
-- `?shot=levels` — the level-select grid, five levels unlocked
+- `?shot=levels` — the level-select grid, twelve cards, five levels unlocked
 
 ## Layout
 
 - `game/index.html` + `game/style.css` — page chrome around the canvas
 - `game/src/main.js` — boot, game loop, click routing, screens
 - `game/src/config.js` — tuning numbers, palettes, level definitions
-- `game/src/world.js` — the eleven procedural scenes, the planted differences, rules & scoring
-- `game/src/render.js` — HUD, panels, found-rings, title / select / clear screens
+- `game/src/world.js` — the twelve procedural scenes, the planted differences, rules & scoring
+- `game/src/render.js` — HUD, panels, found-rings, the named Found list, title / select / clear screens
 - `game/src/input.js` — mouse + keyboard (arrow keys move between level cards)
 - `game/src/sound.js` — WebAudio effects (no audio files)
 - `game/src/shots.js` — the four screenshot scenes (`?shot=cover|play|end|levels`; v4: the cover stages the playground at 4 of 7)

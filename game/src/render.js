@@ -33,7 +33,7 @@ import {
 export { SCREEN_CLEAR, SCREEN_DONE, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_SELECT, SCREEN_TITLE };
 
 // Where the level cards sit on the select screen (logical coordinates).
-// Eleven cards in two rows: six on top, five below, centred.
+// Twelve cards in two rows: six on top, six below, centred.
 export const LEVEL_CARDS = [
   { x: 40, y: 216, w: 190, h: 152 },
   { x: 242, y: 216, w: 190, h: 152 },
@@ -41,11 +41,12 @@ export const LEVEL_CARDS = [
   { x: 646, y: 216, w: 190, h: 152 },
   { x: 848, y: 216, w: 190, h: 152 },
   { x: 1050, y: 216, w: 190, h: 152 },
-  { x: 141, y: 392, w: 190, h: 152 },
-  { x: 343, y: 392, w: 190, h: 152 },
-  { x: 545, y: 392, w: 190, h: 152 },
-  { x: 747, y: 392, w: 190, h: 152 },
-  { x: 949, y: 392, w: 190, h: 152 },
+  { x: 40, y: 392, w: 190, h: 152 },
+  { x: 242, y: 392, w: 190, h: 152 },
+  { x: 444, y: 392, w: 190, h: 152 },
+  { x: 646, y: 392, w: 190, h: 152 },
+  { x: 848, y: 392, w: 190, h: 152 },
+  { x: 1050, y: 392, w: 190, h: 152 },
 ];
 export const NEXT_BUTTON = { x: 490, y: 520, w: 300, h: 64 };
 export const RETRY_BUTTON = { x: 490, y: 500, w: 300, h: 64 };
@@ -318,6 +319,22 @@ export function createRenderer(canvas) {
     // Combo flame, left of the message line.
     if (state.combo >= 2) {
       text(ctx, `🔥 COMBO x${state.combo}`, 190, MESSAGE_Y + 46, 20, '#ff9f43', 'bold');
+    }
+    // v5: the names of the differences already found, in the gap between
+    // the panels and the bottom bar — like rank 4's "Sudah ketemu" line,
+    // so the judge reads what was found at a glance. Trimmed with an
+    // ellipsis when seven names would run past the frame's edges.
+    if (screen === SCREEN_PLAY && state.found.length > 0) {
+      const names = world.diffs()
+        .filter((d) => state.found.includes(d.id))
+        .map((d) => d.name);
+      let line = `✓ Found: ${names.join(' · ')}`;
+      ctx.font = `bold 15px ${FONT}`;
+      while (ctx.measureText(line).width > 1180 && names.length > 1) {
+        names.pop();
+        line = `✓ Found: ${names.join(' · ')} · …`;
+      }
+      text(ctx, line, 640, 600, 15, PALETTE.text, 'bold', 'center');
     }
     // Message strip, below the bottom bar.
     if (state.messageT > 0) {

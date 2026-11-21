@@ -1,4 +1,4 @@
-// The game world: eleven procedural scenes, the planted differences,
+// The game world: twelve procedural scenes, the planted differences,
 // and the rules — find them all before the clock runs out.
 //
 // Each scene is drawn twice from the same painter: once as the original
@@ -247,6 +247,118 @@ function skyPatch(ctx, x, y, r) {
   ctx.fillStyle = daySky(ctx);
   ctx.beginPath();
   ctx.arc(x, y, r + 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// --- Night helpers (v5: the Firefly Night Garden) ------------------------
+// The dark night sky the night scene shares, so a repainted patch blends.
+function nightSky(ctx) {
+  const sky = ctx.createLinearGradient(0, 0, 0, 300);
+  sky.addColorStop(0, '#0b1035');
+  sky.addColorStop(1, '#1e2f63');
+  return sky;
+}
+
+function nightSkyPatch(ctx, x, y, r) {
+  ctx.fillStyle = nightSky(ctx);
+  ctx.beginPath();
+  ctx.arc(x, y, r + 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// A glowing full moon: halo, pale disc and craters.
+function moon(ctx, x, y, r) {
+  ctx.fillStyle = 'rgba(255,244,200,0.14)';
+  ctx.beginPath();
+  ctx.arc(x, y, r + 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,244,200,0.10)';
+  ctx.beginPath();
+  ctx.arc(x, y, r + 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fff3c4';
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#e8d9a0';
+  ctx.beginPath();
+  ctx.arc(x - 8, y - 6, 5, 0, Math.PI * 2);
+  ctx.arc(x + 7, y + 8, 4, 0, Math.PI * 2);
+  ctx.arc(x + 10, y - 10, 3, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// A paper lantern on its string: soft glow, ribbed body, caps.
+function paperLantern(ctx, x, y, color) {
+  ctx.fillStyle = 'rgba(255,214,120,0.20)';
+  ctx.beginPath();
+  ctx.arc(x, y, 30, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#3a2c1e';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 34);
+  ctx.lineTo(x, y - 16);
+  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 14, 18, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+  ctx.lineWidth = 1.5;
+  for (const dy of [-9, 0, 9]) {
+    ctx.beginPath();
+    ctx.ellipse(x, y + dy, 12, 3, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#3a2c1e';
+  ctx.fillRect(x - 5, y - 21, 10, 5);
+  ctx.fillRect(x - 5, y + 16, 10, 5);
+}
+
+// One firefly: a pulsing yellow-green glow with a bright core. The
+// phase keeps the swarm from blinking in unison.
+function firefly(ctx, x, y, t, phase) {
+  const glow = 0.45 + 0.45 * Math.sin(t * 2 + phase);
+  const drift = Math.sin(t * 0.9 + phase) * 3;
+  ctx.fillStyle = `rgba(190,255,120,${(0.35 * glow).toFixed(3)})`;
+  ctx.beginPath();
+  ctx.arc(x + drift, y, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = `rgba(220,255,140,${(0.4 + 0.6 * glow).toFixed(3)})`;
+  ctx.beginPath();
+  ctx.arc(x + drift, y, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// A black cat sitting up: body, head, ears and a curling tail.
+function nightCat(ctx, x, y) {
+  ctx.fillStyle = '#14141f';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 8, 13, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(x, y - 8, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x - 8, y - 12);
+  ctx.lineTo(x - 6, y - 20);
+  ctx.lineTo(x - 2, y - 13);
+  ctx.moveTo(x + 8, y - 12);
+  ctx.lineTo(x + 6, y - 20);
+  ctx.lineTo(x + 2, y - 13);
+  ctx.fill();
+  ctx.strokeStyle = '#14141f';
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x + 12, y + 16);
+  ctx.quadraticCurveTo(x + 24, y + 12, x + 22, y + 2);
+  ctx.stroke();
+  ctx.fillStyle = '#ffe27a';
+  ctx.beginPath();
+  ctx.arc(x - 3, y - 9, 1.6, 0, Math.PI * 2);
+  ctx.arc(x + 3, y - 9, 1.6, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -643,9 +755,53 @@ function paintPlayground(ctx, altered, t) {
   flower(ctx, 25, 452, 0.7, '#ff8fc7', '#ffd166');
   flower(ctx, 350, 452, 0.8, '#ffffff', '#ffd166');
   butterfly(ctx, 380, 170, 0.9, '#ffd166', t);
+  // v5: more life in the middle of the lawn — a kite, two more
+  // butterflies, extra flowers and bushes, another cloud and gulls —
+  // so the grass between the children is not empty.
+  cloud(ctx, 60, 30, 0.6, '#ffffff');
+  gull(ctx, 180, 60, '#33506b');
+  gull(ctx, 430, 40, '#33506b');
+  // A red-and-yellow diamond kite with a fluttering tail, high right.
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(420, 148);
+  ctx.lineTo(436, 170);
+  ctx.lineTo(420, 192);
+  ctx.lineTo(404, 170);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(420, 148);
+  ctx.lineTo(428, 170);
+  ctx.lineTo(420, 192);
+  ctx.lineTo(412, 170);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#8a6b46';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(420, 192);
+  ctx.quadraticCurveTo(410, 210, 418, 226);
+  ctx.stroke();
+  ctx.fillStyle = '#3f7dff';
+  ctx.beginPath();
+  ctx.arc(418, 216, 3, 0, Math.PI * 2);
+  ctx.fill();
+  butterfly(ctx, 385, 205, 0.8, '#ff8fc7', t);
+  butterfly(ctx, 180, 210, 0.8, '#3f7dff', t);
+  flower(ctx, 300, 455, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 230, 452, 0.7, '#ffffff', '#ff6b4a');
+  flower(ctx, 380, 458, 0.7, '#ffd166', '#ff6b4a');
+  // Bushes at the lawn's edges.
+  ctx.fillStyle = '#2f9e44';
+  ctx.beginPath();
+  ctx.arc(20, 400, 14, 0, Math.PI * 2);
+  ctx.arc(540, 380, 16, 0, Math.PI * 2);
+  ctx.fill();
   ctx.strokeStyle = '#2f9e44';
   ctx.lineWidth = 2;
-  for (const [gx, gy] of [[90, 460], [250, 455], [420, 458]]) {
+  for (const [gx, gy] of [[90, 460], [160, 462], [250, 455], [420, 458]]) {
     ctx.beginPath();
     ctx.moveTo(gx - 6, gy);
     ctx.quadraticCurveTo(gx, gy - 8, gx + 6, gy);
@@ -3083,13 +3239,171 @@ function paintPool(ctx, altered, t) {
   if (altered) for (const d of POOL_DIFFS) d.apply(ctx, t);
 }
 
+// --- Level 12: Firefly Night Garden --------------------------------------
+// v5: the one night scene — a dark garden under a glowing moon, paper
+// lanterns on a string, a black cat on the fence and fireflies drifting
+// over the lawn. The dusk/night variety the top entries have that eleven
+// sunny scenes lack. Seven differences, each repainted or moved in place.
+const NIGHT_DIFFS = [
+  {
+    id: 'lantern-color', name: 'Lantern colour', x: 90, y: 135, r: 26,
+    apply(ctx) {
+      // The first lantern, repainted teal over red.
+      paperLantern(ctx, 90, 135, '#2ec4b6');
+    },
+  },
+  {
+    id: 'firefly-count', name: 'Firefly', x: 380, y: 300, r: 22,
+    apply(ctx, t) {
+      // One extra firefly, glowing where the original has none.
+      firefly(ctx, 380, 300, t, 2.2);
+    },
+  },
+  {
+    id: 'moon-phase', name: 'Moon phase', x: 470, y: 70, r: 30,
+    apply(ctx) {
+      // A bite out of the moon: night sky over the right side leaves
+      // a crescent glowing on the left.
+      ctx.fillStyle = nightSky(ctx);
+      ctx.beginPath();
+      ctx.arc(482, 64, 24, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'window-light', name: 'Window light', x: 95, y: 280, r: 26,
+    apply(ctx) {
+      // The left window goes dark: the warm light is switched off.
+      ctx.fillStyle = '#1c2340';
+      ctx.fillRect(82, 265, 26, 30);
+      ctx.strokeStyle = '#0f1430';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(82, 265, 26, 30);
+    },
+  },
+  {
+    id: 'cat-position', name: 'Cat on the fence', x: 300, y: 315, r: 26,
+    apply(ctx) {
+      // The cat hops along the fence: paint the sky back over its ears
+      // and head (above the rail) and the rail's own colour over its
+      // body and tail, then sit the cat down further right.
+      ctx.fillStyle = nightSky(ctx);
+      ctx.fillRect(280, 292, 44, 20);
+      ctx.fillStyle = '#3a2c1e';
+      ctx.fillRect(280, 312, 44, 26);
+      nightCat(ctx, 372, 315);
+    },
+  },
+  {
+    id: 'flower-color', name: 'Night flower', x: 480, y: 420, r: 22,
+    apply(ctx) {
+      // The bottom-right night flower, repainted pink over white.
+      flower(ctx, 480, 420, 0.9, '#ff8fc7', '#ffd166');
+    },
+  },
+  {
+    id: 'star-missing', name: 'Missing star', x: 240, y: 60, r: 20,
+    apply(ctx) {
+      // One star winks out: a patch of night sky covers it.
+      nightSkyPatch(ctx, 240, 60, 10);
+    },
+  },
+];
+
+function paintNight(ctx, altered, t) {
+  // A night garden: deep blue sky, stars, a glowing moon, paper
+  // lanterns on a string, a little house with lit windows, a fence
+  // with a black cat, and fireflies drifting over the dark lawn.
+  ctx.fillStyle = nightSky(ctx);
+  ctx.fillRect(0, 0, 560, 470);
+  // Stars, one of them the difference that can go missing.
+  ctx.fillStyle = '#ffffff';
+  for (const [sx, sy, sr] of [
+    [40, 40, 2], [120, 50, 1.6], [200, 35, 2.2], [240, 60, 2], [300, 45, 1.6],
+    [360, 30, 2], [420, 55, 1.6], [520, 40, 2], [60, 90, 1.6], [160, 75, 2],
+    [280, 90, 1.6], [400, 85, 2], [500, 90, 1.6], [30, 140, 1.6], [540, 130, 2],
+  ]) {
+    ctx.beginPath();
+    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  sparkle(ctx, 340, 60, 0.7, '#fff3c4');
+  sparkle(ctx, 90, 55, 0.6, '#fff3c4');
+  // Glowing full moon, top right.
+  moon(ctx, 470, 70, 26);
+  // A lantern string sagging across the sky.
+  ctx.strokeStyle = '#3a2c1e';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(30, 100);
+  ctx.quadraticCurveTo(280, 128, 530, 82);
+  ctx.stroke();
+  paperLantern(ctx, 90, 135, '#e5534b');
+  paperLantern(ctx, 170, 128, '#ff9f43');
+  paperLantern(ctx, 250, 132, '#ffd166');
+  paperLantern(ctx, 330, 124, '#ff8fc7');
+  paperLantern(ctx, 430, 128, '#2ec4b6');
+  // A little house on the left, windows warm and lit.
+  ctx.fillStyle = '#232a4a';
+  ctx.fillRect(50, 250, 140, 90);
+  ctx.beginPath();
+  ctx.moveTo(40, 252);
+  ctx.lineTo(120, 205);
+  ctx.lineTo(200, 252);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(82, 265, 26, 30);
+  ctx.fillRect(140, 265, 26, 30);
+  ctx.strokeStyle = '#0f1430';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(82, 265, 26, 30);
+  ctx.strokeRect(140, 265, 26, 30);
+  ctx.fillStyle = '#2f3a6e';
+  ctx.fillRect(112, 300, 26, 40);
+  // Dark lawn.
+  ctx.fillStyle = '#1e4d2e';
+  ctx.fillRect(0, 340, 560, 130);
+  ctx.fillStyle = '#275c38';
+  ellipse(ctx, 140, 448, 100, 14);
+  ellipse(ctx, 430, 452, 110, 14);
+  // A wooden fence across the lawn, the cat sitting on its rail.
+  ctx.fillStyle = '#3a2c1e';
+  ctx.fillRect(0, 330, 560, 8);
+  for (let x = 12; x <= 548; x += 28) {
+    ctx.fillRect(x, 312, 12, 26);
+  }
+  nightCat(ctx, 300, 315);
+  // Dark bushes and night flowers along the bottom.
+  ctx.fillStyle = '#14351f';
+  ctx.beginPath();
+  ctx.arc(40, 380, 26, 0, Math.PI * 2);
+  ctx.arc(520, 375, 28, 0, Math.PI * 2);
+  ctx.arc(210, 385, 20, 0, Math.PI * 2);
+  ctx.fill();
+  flower(ctx, 60, 420, 0.9, '#ffffff', '#ffd166');
+  flower(ctx, 150, 435, 0.8, '#ffffff', '#ff8fc7');
+  flower(ctx, 260, 425, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 480, 420, 0.9, '#ffffff', '#ffd166');
+  flower(ctx, 340, 440, 0.7, '#ffffff', '#ffd166');
+  // The firefly swarm, drifting and blinking over the lawn.
+  const swarm = [
+    [120, 360, 0], [200, 300, 1.1], [260, 380, 2.4], [340, 340, 0.6],
+    [420, 380, 3.1], [480, 320, 1.7], [90, 300, 2.9], [500, 400, 0.4],
+  ];
+  for (const [fx, fy, ph] of swarm) firefly(ctx, fx, fy, t, ph);
+  if (altered) for (const d of NIGHT_DIFFS) d.apply(ctx, t);
+}
+
 const PAINTERS = [
   paintPlayground, paintMarket, paintMeadow, paintGarden, paintBeach,
   paintFarm, paintCandy, paintButterflyMeadow, paintToy, paintFruit, paintPool,
+  paintNight,
 ];
 const DIFF_SETS = [
   PLAYGROUND_DIFFS, MARKET_DIFFS, MEADOW_DIFFS, GARDEN_DIFFS, BEACH_DIFFS,
   FARM_DIFFS, CANDY_DIFFS, BUTTERFLY_DIFFS, TOY_DIFFS, FRUIT_DIFFS, POOL_DIFFS,
+  NIGHT_DIFFS,
 ];
 
 // ------------------------------------------------------------------ world

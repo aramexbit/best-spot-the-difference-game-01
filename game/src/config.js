@@ -14,6 +14,9 @@
 // a smiling sun), and the HUD wears the concept's wooden sign, a dark
 // blue timer pill and a wooden "Click the differences!" bar. The pause
 // circle and the hint pill are clickable rects too — see main.js.
+// v5: a twelfth scene, a night garden full of fireflies and paper
+// lanterns — the dusk/night variety the top entries have that eleven
+// sunny scenes lack — and the HUD names every difference already found.
 
 export const FIELD = { width: 1280, height: 720 };
 
@@ -75,9 +78,10 @@ export const LEVELS = [
   { name: 'Toy Workshop', sub: 'Level 9 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🧸' },
   { name: 'Fruit Festival', sub: 'Level 10 — Hard · 9 differences', seconds: 150, diffs: 9, emoji: '🍓' },
   { name: 'Pool Party', sub: 'Level 11 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🏊' },
+  { name: 'Firefly Night Garden', sub: 'Level 12 — Hard · 7 differences', seconds: 150, diffs: 7, emoji: '🌙' },
 ];
 
-/** Differences hidden across all eleven scenes (7 + 8 + 10 + 8 + 9 + 8 + 9 + 7 + 8 + 9 + 8). */
+/** Differences hidden across all twelve scenes (7 + 8 + 10 + 8 + 9 + 8 + 9 + 7 + 8 + 9 + 8 + 7). */
 export const TOTAL_DIFFS = LEVELS.reduce((sum, level) => sum + level.diffs, 0);
 
 // Cheerful light palette: bright sky blue, sunny yellow, coral, mint
