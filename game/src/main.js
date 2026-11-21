@@ -34,6 +34,8 @@ import {
   ACTION_BACK,
   ACTION_CONFIRM,
   ACTION_HINT,
+  ACTION_MOVE_LEFT,
+  ACTION_MOVE_RIGHT,
   ACTION_MUTE,
   ACTION_NEXT,
   ACTION_PAUSE,
@@ -207,7 +209,8 @@ function runGame() {
       announce(state.message);
     }
     if (events & EVENT_CLEAR) {
-      sound.clear();
+      if (state.screen === SCREEN_DONE) sound.fanfare();
+      else sound.clear();
       bankScore();
       screen = state.screen;
       announce(`Level clear! Score ${state.score}.`);
@@ -226,6 +229,12 @@ function runGame() {
     if (click) handleClick(click);
     if (actions & ACTION_HINT && screen === SCREEN_PLAY) {
       if (world.useHint() & EVENT_HINT) sound.hint();
+    }
+    if (actions & ACTION_MOVE_LEFT && screen === SCREEN_SELECT) {
+      world.state.levelIndex = Math.max(0, world.state.levelIndex - 1);
+    }
+    if (actions & ACTION_MOVE_RIGHT && screen === SCREEN_SELECT) {
+      world.state.levelIndex = Math.min(world.state.unlocked, world.state.levelIndex + 1);
     }
     if (actions & ACTION_MUTE) {
       const muted = sound.toggleMute();
@@ -289,7 +298,8 @@ function runGame() {
     // the shown screen can never disagree with the world.
     if (screen === SCREEN_PLAY && world.state.screen !== SCREEN_PLAY) {
       if (world.state.screen === SCREEN_CLEAR || world.state.screen === SCREEN_DONE) {
-        sound.clear();
+        if (world.state.screen === SCREEN_DONE) sound.fanfare();
+        else sound.clear();
         bankScore();
       } else if (world.state.screen === SCREEN_OVER) {
         sound.over();

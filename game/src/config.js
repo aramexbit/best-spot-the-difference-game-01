@@ -6,6 +6,10 @@
 // panels side by side — the original on the left, the altered copy on
 // the right — and a message strip along the bottom. Each panel shows the
 // same procedural scene; only the planted differences change.
+//
+// v2: eleven sunny scenes, 91 planted differences, and a cheerful light
+// palette — bright sky blue, sunny yellow, coral, mint and warm cream —
+// so every frame reads bright and friendly at a glance.
 
 export const FIELD = { width: 1280, height: 720 };
 
@@ -18,7 +22,7 @@ export const STEP = 1 / 60;
 export const PANEL = { width: 560, height: 470, radius: 10 };
 export const PANEL_LEFT = { x: 40, y: 118 };
 export const PANEL_RIGHT = { x: 680, y: 118 };
-export const PANEL_GAP = 40;
+export const PANEL_GAP = 80;
 
 export const HUD = { height: 96, hintButton: { x: 1052, y: 18, w: 188, h: 60 } };
 export const MESSAGE_Y = 612;
@@ -40,34 +44,45 @@ export const HINT = { perLevel: 3, pulseSeconds: 2.6, cooldownSeconds: 8 };
 // Seconds on the clock when a level starts. The bar drains in real time;
 // finding everything before it empties clears the level.
 export const LEVELS = [
-  { name: 'Harbor Morning', sub: 'Level 1 — Easy · 7 differences', seconds: 150, diffs: 7 },
-  { name: 'Night Market', sub: 'Level 2 — Medium · 8 differences', seconds: 150, diffs: 8 },
-  { name: 'Forest Camp', sub: 'Level 3 — Hard · 10 differences', seconds: 180, diffs: 10 },
+  { name: 'Harbor Morning', sub: 'Level 1 — Easy · 7 differences', seconds: 150, diffs: 7, emoji: '⚓' },
+  { name: 'Sunny Street Market', sub: 'Level 2 — Easy · 8 differences', seconds: 150, diffs: 8, emoji: '🛍️' },
+  { name: 'Sunny Meadow', sub: 'Level 3 — Medium · 10 differences', seconds: 180, diffs: 10, emoji: '🌳' },
+  { name: 'Rainbow Garden', sub: 'Level 4 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🌈' },
+  { name: 'Beach Party', sub: 'Level 5 — Medium · 9 differences', seconds: 150, diffs: 9, emoji: '🏖️' },
+  { name: 'Sunny Farm', sub: 'Level 6 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🚜' },
+  { name: 'Candy Town', sub: 'Level 7 — Hard · 9 differences', seconds: 150, diffs: 9, emoji: '🍭' },
+  { name: 'Butterfly Meadow', sub: 'Level 8 — Medium · 7 differences', seconds: 150, diffs: 7, emoji: '🦋' },
+  { name: 'Toy Workshop', sub: 'Level 9 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🧸' },
+  { name: 'Fruit Festival', sub: 'Level 10 — Hard · 9 differences', seconds: 150, diffs: 9, emoji: '🍓' },
+  { name: 'Pool Party', sub: 'Level 11 — Medium · 8 differences', seconds: 150, diffs: 8, emoji: '🏊' },
 ];
 
-/** Differences hidden across all three scenes (7 + 8 + 10). */
+/** Differences hidden across all eleven scenes (7 + 8 + 10 + 8 + 9 + 8 + 9 + 7 + 8 + 9 + 8). */
 export const TOTAL_DIFFS = LEVELS.reduce((sum, level) => sum + level.diffs, 0);
 
+// Cheerful light palette: bright sky blue, sunny yellow, coral, mint
+// and warm cream. The page and HUD are light, so all text is dark and
+// stays readable; the accent colours carry the sunny mood.
 export const PALETTE = {
-  backdrop: '#141a26',
-  backdropTop: '#1c2436',
-  hudPanel: '#202839',
-  hudEdge: '#39445e',
-  text: '#f2f4f8',
-  muted: '#9aa5bd',
-  accent: '#ffd166',
-  accentDark: '#e8a93d',
-  good: '#7ee787',
-  bad: '#ff6b6b',
-  ring: '#ffd166',
-  ringFound: '#7ee787',
-  hintPulse: '#4fc3f7',
-  panelEdge: '#3a4560',
-  panelShadow: 'rgba(0,0,0,0.45)',
-  button: '#2f6fed',
-  buttonHover: '#3f7dff',
-  buttonDisabled: '#3a4358',
-  chip: '#28314a',
+  backdrop: '#ffe9a8',
+  backdropTop: '#aee3ff',
+  hudPanel: '#fffdf5',
+  hudEdge: '#f0d9a0',
+  text: '#2e2a26',
+  muted: '#7a6a55',
+  accent: '#ff7a3d',
+  accentDark: '#e85d26',
+  good: '#1faa5c',
+  bad: '#e5484d',
+  ring: '#ffb703',
+  ringFound: '#1faa5c',
+  hintPulse: '#2196f3',
+  panelEdge: '#ffffff',
+  panelShadow: 'rgba(120,80,20,0.25)',
+  button: '#ff6b4a',
+  buttonHover: '#ff8266',
+  buttonDisabled: '#d8cfc0',
+  chip: '#fff0c2',
 };
 
 export const FONT = 'system-ui, -apple-system, "Segoe UI", sans-serif';

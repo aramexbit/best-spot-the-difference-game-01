@@ -5,11 +5,13 @@
 //
 // The game is drawn in a fixed 1280x720 logical space and scaled to the
 // window, so the screenshots are the same frame at any window size.
+// The whole look is sunny: cream panels, warm light overlays, dark text.
 
 import {
   FIELD,
   FONT,
   HUD,
+  LEVELS,
   MESSAGE_Y,
   PALETTE,
   PANEL,
@@ -30,14 +32,28 @@ import {
 export { SCREEN_CLEAR, SCREEN_DONE, SCREEN_OVER, SCREEN_PAUSED, SCREEN_PLAY, SCREEN_SELECT, SCREEN_TITLE };
 
 // Where the level cards sit on the select screen (logical coordinates).
+// Eleven cards in two rows: six on top, five below, centred.
 export const LEVEL_CARDS = [
-  { x: 110, y: 250, w: 320, h: 220 },
-  { x: 480, y: 250, w: 320, h: 220 },
-  { x: 850, y: 250, w: 320, h: 220 },
+  { x: 40, y: 216, w: 190, h: 152 },
+  { x: 242, y: 216, w: 190, h: 152 },
+  { x: 444, y: 216, w: 190, h: 152 },
+  { x: 646, y: 216, w: 190, h: 152 },
+  { x: 848, y: 216, w: 190, h: 152 },
+  { x: 1050, y: 216, w: 190, h: 152 },
+  { x: 141, y: 392, w: 190, h: 152 },
+  { x: 343, y: 392, w: 190, h: 152 },
+  { x: 545, y: 392, w: 190, h: 152 },
+  { x: 747, y: 392, w: 190, h: 152 },
+  { x: 949, y: 392, w: 190, h: 152 },
 ];
 export const NEXT_BUTTON = { x: 490, y: 520, w: 300, h: 64 };
 export const RETRY_BUTTON = { x: 490, y: 500, w: 300, h: 64 };
 export const START_BUTTON = { x: 440, y: 520, w: 400, h: 70 };
+
+// A warm light veil for the end screens, so the bright panels behind
+// them stay visible instead of going dark.
+const VEIL = 'rgba(255,248,225,0.88)';
+const LOCKED_FILL = '#f3ead3';
 
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -189,7 +205,7 @@ export function createRenderer(canvas) {
     roundRect(ctx, 24, 12, 1232, 76, 12);
     ctx.stroke();
     text(ctx, 'SPOT THE DIFFERENCE', 44, 34, 24, PALETTE.text);
-    text(ctx, `${lvl.name}  ·  Level ${state.levelIndex + 1} of 3`, 44, 64, 15, PALETTE.muted, 'normal');
+    text(ctx, `${lvl.name}  ·  Level ${state.levelIndex + 1} of ${LEVELS.length}`, 44, 64, 15, PALETTE.muted, 'normal');
     // Counter — the heart of the game, big and central.
     const total = world.diffs().length;
     const found = state.found.length;
@@ -203,7 +219,7 @@ export function createRenderer(canvas) {
     const barY = 600;
     const barW = 760;
     const frac = Math.max(0, state.timeLeft / state.timeTotal);
-    ctx.fillStyle = '#10141f';
+    ctx.fillStyle = '#eadfc3';
     roundRect(ctx, barX, barY, barW, 12, 6);
     ctx.fill();
     const low = frac < 0.25;
@@ -256,7 +272,7 @@ export function createRenderer(canvas) {
     // A miniature preview: the harbor scene, both panels, mid-hunt.
     drawPanels(world);
     blitPanels(world);
-    text(ctx, `3 hand-drawn scenes  ·  ${TOTAL_DIFFS} hidden differences  ·  combos, hints & a race against the clock`, 640, 640, 17, PALETTE.muted, 'normal', 'center');
+    text(ctx, `${LEVELS.length} sunny hand-drawn scenes  ·  ${TOTAL_DIFFS} hidden differences  ·  combos, hints & a race against the clock`, 640, 640, 17, PALETTE.muted, 'normal', 'center');
     ctx.fillStyle = PALETTE.button;
     roundRect(ctx, START_BUTTON.x, START_BUTTON.y, START_BUTTON.w, START_BUTTON.h, 14);
     ctx.fill();
@@ -268,48 +284,52 @@ export function createRenderer(canvas) {
     text(ctx, 'CHOOSE YOUR HUNT', 640, 130, 44, PALETTE.text, 'bold', 'center');
     text(ctx, 'Clear a level to unlock the next one. Harder scenes hide more differences.', 640, 178, 18, PALETTE.muted, 'normal', 'center');
     const state = world.state;
-    const names = ['Harbor Morning', 'Night Market', 'Forest Camp'];
-    const descs = ['7 differences · 2:30', '8 differences · 2:30', '10 differences · 3:00'];
-    const emojis = ['⚓', '🏮', '🌲'];
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i < LEVELS.length; i += 1) {
       const card = LEVEL_CARDS[i];
+      const lvl = LEVELS[i];
       const locked = i > state.unlocked;
-      ctx.fillStyle = locked ? '#1a2132' : PALETTE.hudPanel;
+      ctx.fillStyle = locked ? LOCKED_FILL : PALETTE.hudPanel;
       roundRect(ctx, card.x, card.y, card.w, card.h, 16);
       ctx.fill();
       ctx.strokeStyle = i === state.levelIndex ? PALETTE.accent : PALETTE.hudEdge;
       ctx.lineWidth = i === state.levelIndex ? 3 : 1.5;
       roundRect(ctx, card.x, card.y, card.w, card.h, 16);
       ctx.stroke();
-      text(ctx, emojis[i], card.x + card.w / 2, card.y + 58, 44, '#ffffff', 'bold', 'center');
-      text(ctx, names[i], card.x + card.w / 2, card.y + 122, 22, locked ? PALETTE.muted : PALETTE.text, 'bold', 'center');
-      text(ctx, locked ? '🔒 Locked — clear the previous level' : descs[i], card.x + card.w / 2, card.y + 158, 15, PALETTE.muted, 'normal', 'center');
+      // A dimmed emoji on a locked card reads as "not yet" at a glance.
+      ctx.save();
+      if (locked) ctx.globalAlpha = 0.35;
+      text(ctx, lvl.emoji, card.x + card.w / 2, card.y + 44, 36, '#ffffff', 'bold', 'center');
+      ctx.restore();
+      text(ctx, `LEVEL ${i + 1}`, card.x + card.w / 2, card.y + 16, 11, PALETTE.muted, 'bold', 'center');
+      text(ctx, lvl.name, card.x + card.w / 2, card.y + 88, 15, locked ? PALETTE.muted : PALETTE.text, 'bold', 'center');
+      text(ctx, locked ? '🔒 Locked' : `${lvl.diffs} differences · ${formatTime(lvl.seconds)}`, card.x + card.w / 2, card.y + 116, 13, PALETTE.muted, 'normal', 'center');
       if (state.levelScores[i] !== undefined) {
-        text(ctx, `Best: ${state.levelScores[i]} pts`, card.x + card.w / 2, card.y + 188, 15, PALETTE.good, 'bold', 'center');
+        text(ctx, `Best: ${state.levelScores[i]} pts`, card.x + card.w / 2, card.y + 138, 13, PALETTE.good, 'bold', 'center');
       }
     }
-    text(ctx, 'Click a card to play it  ·  Esc back to title', 640, 520, 17, PALETTE.muted, 'normal', 'center');
+    text(ctx, 'Click a card to play it  ·  Esc back to title  ·  ← → move between cards', 640, 592, 17, PALETTE.muted, 'normal', 'center');
   }
 
   function drawClear(world) {
     const state = world.state;
     const lvl = world.level();
-    ctx.fillStyle = 'rgba(10,14,24,0.72)';
+    const last = state.levelIndex + 1 >= LEVELS.length;
+    ctx.fillStyle = VEIL;
     ctx.fillRect(0, 0, FIELD.width, FIELD.height);
     text(ctx, '🎉  LEVEL CLEAR!', 640, 210, 52, PALETTE.good, 'bold', 'center');
     text(ctx, `${lvl.name} — all ${world.diffs().length} differences found`, 640, 268, 22, PALETTE.text, 'normal', 'center');
     text(ctx, `Level score  ${state.score} pts   (time bonus +${state.clearBonus})`, 640, 330, 22, PALETTE.accent, 'bold', 'center');
     text(ctx, `Total so far  ${state.totalScore} pts   ·   Best combo x${state.bestCombo}`, 640, 372, 18, PALETTE.muted, 'normal', 'center');
-    text(ctx, state.levelIndex + 1 < 3 ? 'Next up: a harder scene with more hiding spots.' : '', 640, 414, 17, PALETTE.muted, 'normal', 'center');
+    text(ctx, last ? '' : `Next up: ${LEVELS[state.levelIndex + 1].name} — another sunny scene to hunt.`, 640, 414, 17, PALETTE.muted, 'normal', 'center');
     ctx.fillStyle = PALETTE.button;
     roundRect(ctx, NEXT_BUTTON.x, NEXT_BUTTON.y, NEXT_BUTTON.w, NEXT_BUTTON.h, 14);
     ctx.fill();
-    text(ctx, state.levelIndex + 1 < 3 ? 'NEXT LEVEL  (N)  ▶' : 'SEE RESULTS  (N)  ▶', 640, NEXT_BUTTON.y + 33, 21, '#ffffff', 'bold', 'center');
+    text(ctx, last ? 'SEE RESULTS  (N)  ▶' : 'NEXT LEVEL  (N)  ▶', 640, NEXT_BUTTON.y + 33, 21, '#ffffff', 'bold', 'center');
   }
 
   function drawOver(world) {
     const state = world.state;
-    ctx.fillStyle = 'rgba(10,14,24,0.78)';
+    ctx.fillStyle = VEIL;
     ctx.fillRect(0, 0, FIELD.width, FIELD.height);
     text(ctx, '⏰  TIME UP!', 640, 220, 52, PALETTE.bad, 'bold', 'center');
     text(ctx, `${world.level().name} — you found ${state.found.length} of ${world.diffs().length} differences`, 640, 280, 22, PALETTE.text, 'normal', 'center');
@@ -323,13 +343,16 @@ export function createRenderer(canvas) {
 
   function drawDone(world, best) {
     const state = world.state;
-    ctx.fillStyle = 'rgba(10,14,24,0.72)';
+    ctx.fillStyle = VEIL;
     ctx.fillRect(0, 0, FIELD.width, FIELD.height);
-    text(ctx, '🏆  MASTER SPOTTER!', 640, 180, 52, PALETTE.accent, 'bold', 'center');
-    text(ctx, 'All three scenes cleared — every one of the 25 differences found.', 640, 238, 22, PALETTE.text, 'normal', 'center');
-    text(ctx, `TOTAL SCORE  ${state.totalScore} pts`, 640, 310, 34, PALETTE.good, 'bold', 'center');
-    text(ctx, `Best combo x${state.bestCombo}  ·  Best total ${Math.max(best, state.totalScore)}`, 640, 362, 18, PALETTE.muted, 'normal', 'center');
-    text(ctx, 'Harbor Morning  ✓     Night Market  ✓     Forest Camp  ✓', 640, 420, 20, PALETTE.text, 'normal', 'center');
+    text(ctx, '🏆  MASTER SPOTTER!', 640, 170, 52, PALETTE.accent, 'bold', 'center');
+    text(ctx, `All ${LEVELS.length} sunny scenes cleared — every one of the ${TOTAL_DIFFS} differences found.`, 640, 232, 22, PALETTE.text, 'normal', 'center');
+    text(ctx, `TOTAL SCORE  ${state.totalScore} pts`, 640, 302, 34, PALETTE.good, 'bold', 'center');
+    text(ctx, `Best combo x${state.bestCombo}  ·  Best total ${Math.max(best, state.totalScore)}`, 640, 356, 18, PALETTE.muted, 'normal', 'center');
+    const first = LEVELS.slice(0, 6).map((l) => `${l.emoji} ${l.name}`).join('  ✓  ');
+    const second = LEVELS.slice(6).map((l) => `${l.emoji} ${l.name}`).join('  ✓  ');
+    text(ctx, `${first}  ✓`, 640, 412, 15, PALETTE.text, 'normal', 'center');
+    text(ctx, `${second}  ✓`, 640, 442, 15, PALETTE.text, 'normal', 'center');
     ctx.fillStyle = PALETTE.button;
     roundRect(ctx, NEXT_BUTTON.x, NEXT_BUTTON.y, NEXT_BUTTON.w, NEXT_BUTTON.h, 14);
     ctx.fill();
@@ -337,7 +360,7 @@ export function createRenderer(canvas) {
   }
 
   function drawPaused() {
-    ctx.fillStyle = 'rgba(10,14,24,0.7)';
+    ctx.fillStyle = VEIL;
     ctx.fillRect(0, 0, FIELD.width, FIELD.height);
     text(ctx, '⏸  PAUSED', 640, 320, 48, PALETTE.text, 'bold', 'center');
     text(ctx, 'Press P or click to keep hunting', 640, 380, 20, PALETTE.muted, 'normal', 'center');

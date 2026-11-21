@@ -2,7 +2,8 @@
 // oscillators shaped by a gain envelope, built lazily on the first user
 // gesture (browsers only allow audio after one). A found difference
 // chimes higher with the combo; a wrong click buzzes low; a hint blips;
-// clearing a level plays a short arpeggio.
+// clearing a level plays a short arpeggio, and clearing the last one
+// plays a longer fanfare.
 
 export function createSound() {
   let audio = null;
@@ -70,6 +71,13 @@ export function createSound() {
     clear() {
       const notes = [523, 659, 784, 1046];
       notes.forEach((freq, i) => tone(freq, i * 0.11, 0.24, 'triangle', 0.16));
+    },
+    fanfare() {
+      // Clearing the eleventh scene earns the long fanfare, not the
+      // short level-clear arpeggio.
+      const notes = [523, 659, 784, 1046, 784, 1046, 1318];
+      notes.forEach((freq, i) => tone(freq, i * 0.13, 0.3, 'triangle', 0.17));
+      tone(1568, 0.91, 0.5, 'sine', 0.14);
     },
     over() {
       const notes = [392, 330, 262];

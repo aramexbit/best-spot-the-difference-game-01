@@ -4,10 +4,10 @@
 // level-select screen — so the frame is exactly what a player sees, with
 // the same seed always giving the same frame.
 //
-//   cover  — Harbor Morning mid-hunt: 3 of 7 found, counter and timer live
-//   play   — Night Market mid-hunt: 2 of 8 found, a different scene
+//   cover  — Candy Town mid-hunt: 4 of 9 found, the densest scene
+//   play   — Rainbow Garden mid-hunt: 3 of 8 found, a different scene
 //   end    — Harbor Morning cleared: score, time bonus, next-level button
-//   levels — the level-select screen, two levels unlocked
+//   levels — the level-select screen, five levels unlocked
 // Any other name stages the cover.
 
 import { SCREEN_CLEAR, SCREEN_PLAY, SCREEN_SELECT } from './world.js';
@@ -29,31 +29,37 @@ function stageMidHunt(world, levelIndex, foundIds, score, combo, timeLeft) {
 
 export function stageShot(name, world) {
   if (name === 'play') {
-    return stageMidHunt(world, 1, ['moon-phase', 'lantern-color'], 225, 2, 121);
+    // Rainbow Garden, 3 of 8 found (100 + 125 + 150 = 375).
+    return stageMidHunt(world, 3, ['rainbow-band', 'sunflower-missing', 'birdhouse-door'], 375, 3, 121);
   }
   if (name === 'end') {
     world.startLevel(0);
     const state = world.state;
     state.found = world.diffs().map((d) => d.id);
-    state.score = 1540;
+    // 7 finds at combo 1..7: 100+125+150+175+200+225+250 = 1225,
+    // plus the time bonus 84s x 10 = 840, so 2065 in total.
+    state.score = 2065;
     state.clearBonus = 840;
-    state.totalScore = 1540;
-    state.bestCombo = 5;
+    state.totalScore = 2065;
+    state.bestCombo = 7;
     state.timeLeft = 84;
     state.animTime = 0.6;
     state.messageT = 0;
     state.screen = SCREEN_CLEAR;
-    return { screen: SCREEN_CLEAR, best: 1540 };
+    return { screen: SCREEN_CLEAR, best: 2065 };
   }
   if (name === 'levels') {
     world.startLevel(0);
     const state = world.state;
-    state.unlocked = 1;
-    state.levelScores = [1540];
+    state.unlocked = 4;
+    state.levelScores = [1540, 1280, 1910, 940];
+    // Highlight the newest unlocked card (Beach Party) with the accent ring.
+    state.levelIndex = 4;
     state.animTime = 0.6;
     state.screen = SCREEN_SELECT;
-    return { screen: SCREEN_SELECT, best: 1540 };
+    return { screen: SCREEN_SELECT, best: 1910 };
   }
-  // cover (and the default): Harbor Morning, 3 of 7 found.
-  return stageMidHunt(world, 0, ['sun-rays', 'sail-color', 'gull-missing'], 340, 2, 98);
+  // cover (and the default): Candy Town, 4 of 9 found
+  // (100 + 125 + 150 + 175 = 550) — the densest scene mid-hunt.
+  return stageMidHunt(world, 6, ['lollipop-color', 'gumdrop-missing', 'shop-sign', 'cane-stripe'], 550, 4, 98);
 }

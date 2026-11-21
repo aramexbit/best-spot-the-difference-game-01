@@ -4,7 +4,8 @@
 //   node serve.ts --port N   serves game/ on http://localhost:N
 // It sends the MIME types a browser game needs, refuses any path outside
 // game/, and otherwise does nothing clever: a development convenience,
-// not a web server for the internet.
+// not a web server for the internet. The eleven scenes and the four
+// staged screenshot frames all load from here.
 import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -68,5 +69,5 @@ createServer((request, response) => {
   createReadStream(file).pipe(response);
 }).listen(port, '127.0.0.1', () => {
   console.log(`game/ is on http://localhost:${port}`);
-  console.log('screenshot scenes: ?shot=cover, ?shot=play, ?shot=end, ?shot=levels (add &seed=7)');
+  console.log('eleven sunny scenes; screenshot frames: ?shot=cover, ?shot=play, ?shot=end, ?shot=levels (add &seed=7)');
 });

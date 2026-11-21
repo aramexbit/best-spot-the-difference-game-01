@@ -1,4 +1,4 @@
-// The game world: three procedural scenes, the planted differences,
+// The game world: eleven procedural scenes, the planted differences,
 // and the rules — find them all before the clock runs out.
 //
 // Each scene is drawn twice from the same painter: once as the original
@@ -8,9 +8,14 @@
 // the two panels are identical except for the differences on purpose.
 //
 // A difference is { id, name, x, y, r, apply }: x/y/r live in scene
-// coordinates (560x470, see PANEL in config.js); apply(ctx) repaints
+// coordinates (560x470, see PANEL in config.js); apply(ctx, t) repaints
 // that spot the altered way. A click within r of an unfound difference
 // finds it on both panels at once.
+//
+// v2: eleven sunny scenes in one cheerful palette — bright sky blue,
+// sunny yellow, coral, mint and warm cream. Every scene is dense: more
+// objects, animals, decorations and small activities, so each frame is
+// busy and worth studying (the TABUH lesson: ramai + ada isinya).
 
 import { HINT, LEVELS, PANEL, SCORE } from './config.js';
 
@@ -70,15 +75,92 @@ function pine(ctx, x, y, s, color) {
   }
 }
 
+// A five-petal flower: stem, leaves and a bright centre.
+function flower(ctx, x, y, s, petal, center) {
+  ctx.strokeStyle = '#2f9e44';
+  ctx.lineWidth = 3 * s;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y + 22 * s);
+  ctx.stroke();
+  ctx.fillStyle = '#2f9e44';
+  ellipse(ctx, x - 7 * s, y + 14 * s, 7 * s, 3.5 * s);
+  ctx.fillStyle = petal;
+  for (let i = 0; i < 5; i += 1) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    ellipse(ctx, x + Math.cos(a) * 9 * s, y + Math.sin(a) * 9 * s, 7 * s, 7 * s);
+  }
+  ctx.fillStyle = center;
+  ctx.beginPath();
+  ctx.arc(x, y, 5 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// A butterfly with two wing pairs; wings flutter with time t.
+function butterfly(ctx, x, y, s, color, t) {
+  const flap = 0.7 + 0.3 * Math.sin(t * 6 + x);
+  ctx.fillStyle = color;
+  ellipse(ctx, x - 11 * s * flap, y, 10 * s, 13 * s);
+  ellipse(ctx, x + 11 * s * flap, y, 10 * s, 13 * s);
+  ctx.fillStyle = '#ffffff';
+  ellipse(ctx, x - 11 * s * flap, y - 3 * s, 3.5 * s, 4.5 * s);
+  ellipse(ctx, x + 11 * s * flap, y - 3 * s, 3.5 * s, 4.5 * s);
+  ctx.fillStyle = '#2e2a26';
+  ellipse(ctx, x, y, 3 * s, 10 * s);
+}
+
+// A smiling sun: disc plus short rays.
+function sun(ctx, x, y, r, rayColor) {
+  ctx.strokeStyle = rayColor;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 8; i += 1) {
+    const a = (i / 8) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(x + Math.cos(a) * (r + 8), y + Math.sin(a) * (r + 8));
+    ctx.lineTo(x + Math.cos(a) * (r + 20), y + Math.sin(a) * (r + 20));
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ffd94d';
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+// A four-point sparkle star.
+function sparkle(ctx, x, y, s, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 10 * s);
+  ctx.quadraticCurveTo(x + 3 * s, y - 3 * s, x + 10 * s, y);
+  ctx.quadraticCurveTo(x + 3 * s, y + 3 * s, x, y + 10 * s);
+  ctx.quadraticCurveTo(x - 3 * s, y + 3 * s, x - 10 * s, y);
+  ctx.quadraticCurveTo(x - 3 * s, y - 3 * s, x, y - 10 * s);
+  ctx.fill();
+}
+
+// The bright day sky every scene shares, so a repainted patch blends in.
+function daySky(ctx) {
+  const sky = ctx.createLinearGradient(0, 0, 0, 300);
+  sky.addColorStop(0, '#7ec8f7');
+  sky.addColorStop(1, '#dff2fa');
+  return sky;
+}
+
+function skyPatch(ctx, x, y, r) {
+  ctx.fillStyle = daySky(ctx);
+  ctx.beginPath();
+  ctx.arc(x, y, r + 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 // --- Level 1: Harbor Morning -------------------------------------------
 const HARBOR_DIFFS = [
   {
     id: 'sun-rays', name: 'Sun rays', x: 470, y: 70, r: 44,
     apply(ctx) {
-      const sky = ctx.createLinearGradient(0, 0, 0, 300);
-      sky.addColorStop(0, '#8ec9e8');
-      sky.addColorStop(1, '#dff2fa');
-      ctx.fillStyle = sky;
+      ctx.fillStyle = daySky(ctx);
       ctx.beginPath();
       ctx.arc(470, 70, 56, 0, Math.PI * 2);
       ctx.fill();
@@ -102,13 +184,7 @@ const HARBOR_DIFFS = [
   },
   {
     id: 'gull-missing', name: 'Seagull', x: 330, y: 108, r: 26,
-    apply(ctx) {
-      const sky = ctx.createLinearGradient(0, 0, 0, 300);
-      sky.addColorStop(0, '#8ec9e8');
-      sky.addColorStop(1, '#dff2fa');
-      ctx.fillStyle = sky;
-      ellipse(ctx, 330, 108, 20, 12);
-    },
+    apply(ctx) { skyPatch(ctx, 330, 108, 20); },
   },
   {
     id: 'lighthouse-stripe', name: 'Lighthouse stripe', x: 84, y: 205, r: 28,
@@ -144,10 +220,7 @@ const HARBOR_DIFFS = [
 ];
 
 function paintHarbor(ctx, altered, t) {
-  const sky = ctx.createLinearGradient(0, 0, 0, 300);
-  sky.addColorStop(0, '#8ec9e8');
-  sky.addColorStop(1, '#dff2fa');
-  ctx.fillStyle = sky;
+  ctx.fillStyle = daySky(ctx);
   ctx.fillRect(0, 0, 560, 300);
   const sea = ctx.createLinearGradient(0, 300, 0, 470);
   sea.addColorStop(0, '#3d8fc4');
@@ -155,27 +228,33 @@ function paintHarbor(ctx, altered, t) {
   ctx.fillStyle = sea;
   ctx.fillRect(0, 300, 560, 170);
   // Sun with rays.
-  ctx.strokeStyle = '#f2b705';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  for (let i = 0; i < 8; i += 1) {
-    const a = (i / 8) * Math.PI * 2;
-    ctx.beginPath();
-    ctx.moveTo(470 + Math.cos(a) * 40, 70 + Math.sin(a) * 40);
-    ctx.lineTo(470 + Math.cos(a) * 52, 70 + Math.sin(a) * 52);
-    ctx.stroke();
-  }
-  ctx.fillStyle = '#ffd94d';
-  ctx.beginPath();
-  ctx.arc(470, 70, 32, 0, Math.PI * 2);
-  ctx.fill();
-  // Clouds and gulls.
+  sun(ctx, 470, 70, 32, '#f2b705');
+  // Clouds and gulls — a busy morning sky.
   cloud(ctx, 90, 90, 1, '#ffffff');
   cloud(ctx, 250, 55, 0.8, '#ffffff');
   cloud(ctx, 420, 140, 0.9, '#f4fbff');
+  cloud(ctx, 40, 160, 0.6, '#ffffff');
+  cloud(ctx, 520, 40, 0.55, '#ffffff');
   gull(ctx, 200, 92, '#33506b');
   gull(ctx, 262, 72, '#33506b');
   gull(ctx, 330, 108, '#33506b');
+  gull(ctx, 150, 130, '#33506b');
+  // A distant sailboat on the horizon.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.moveTo(500, 292);
+  ctx.lineTo(500, 316);
+  ctx.lineTo(522, 316);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#7a3b2e';
+  ctx.beginPath();
+  ctx.moveTo(486, 316);
+  ctx.lineTo(528, 316);
+  ctx.lineTo(520, 326);
+  ctx.lineTo(494, 326);
+  ctx.closePath();
+  ctx.fill();
   // Lighthouse on the left rocks.
   ctx.fillStyle = '#6b7280';
   ctx.beginPath();
@@ -204,7 +283,7 @@ function paintHarbor(ctx, altered, t) {
   ctx.lineTo(110, 132);
   ctx.closePath();
   ctx.fill();
-  // Wooden pier.
+  // Wooden pier with a beach ball and a bucket.
   ctx.fillStyle = '#8a6b46';
   ctx.fillRect(180, 292, 220, 14);
   ctx.fillStyle = '#6f5433';
@@ -212,6 +291,21 @@ function paintHarbor(ctx, altered, t) {
   ctx.fillStyle = '#7a5c38';
   ctx.fillRect(196, 306, 8, 34);
   ctx.fillRect(376, 306, 8, 34);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.arc(392, 282, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd94d';
+  ctx.beginPath();
+  ctx.arc(392, 282, 9, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#3f7dff';
+  ctx.beginPath();
+  ctx.moveTo(392, 273);
+  ctx.lineTo(392, 291);
+  ctx.lineTo(383, 282);
+  ctx.closePath();
+  ctx.fill();
   // Sailboat.
   ctx.fillStyle = '#5b3a1e';
   ctx.fillRect(303, 196, 4, 100);
@@ -273,14 +367,18 @@ function paintHarbor(ctx, altered, t) {
   if (altered) for (const d of HARBOR_DIFFS) d.apply(ctx, t);
 }
 
-// --- Level 2: Night Market ---------------------------------------------
+// --- Level 2: Sunny Street Market ----------------------------------------
 const MARKET_DIFFS = [
   {
-    id: 'moon-phase', name: 'Moon', x: 478, y: 62, r: 34,
+    id: 'sun-rays', name: 'Sun rays', x: 478, y: 62, r: 34,
     apply(ctx) {
-      ctx.fillStyle = '#2a3560';
+      ctx.fillStyle = daySky(ctx);
       ctx.beginPath();
-      ctx.arc(492, 56, 24, 0, Math.PI * 2);
+      ctx.arc(478, 62, 44, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffd94d';
+      ctx.beginPath();
+      ctx.arc(478, 62, 26, 0, Math.PI * 2);
       ctx.fill();
     },
   },
@@ -296,10 +394,7 @@ const MARKET_DIFFS = [
   {
     id: 'cat-missing', name: 'Roof cat', x: 300, y: 168, r: 28,
     apply(ctx) {
-      const sky = ctx.createLinearGradient(0, 0, 0, 470);
-      sky.addColorStop(0, '#141b33');
-      sky.addColorStop(1, '#2a3560');
-      ctx.fillStyle = sky;
+      ctx.fillStyle = '#ffd166';
       ctx.fillRect(274, 144, 52, 30);
     },
   },
@@ -322,26 +417,30 @@ const MARKET_DIFFS = [
       ctx.fillStyle = '#2c2118';
       ctx.fillRect(258, 244, 84, 36);
       ctx.fillStyle = '#ffd166';
-      ctx.font = 'bold 20px system-ui, sans-serif';
+      ctx.font = 'bold 18px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('SOUP', 300, 263);
+      ctx.fillText('LEMON', 300, 263);
     },
   },
   {
     id: 'basket-missing', name: 'Fruit basket', x: 452, y: 372, r: 28,
     apply(ctx) {
-      ctx.fillStyle = '#3a2c22';
+      ctx.fillStyle = '#f7e8c8';
       ctx.fillRect(428, 348, 50, 40);
     },
   },
   {
-    id: 'bulb-out', name: 'String bulb', x: 400, y: 117, r: 22,
+    id: 'balloon-color', name: 'Balloon', x: 400, y: 117, r: 24,
     apply(ctx) {
-      ctx.fillStyle = '#3a4560';
+      ctx.fillStyle = '#ff6b4a';
+      ellipse(ctx, 400, 117, 11, 14);
+      ctx.strokeStyle = '#2e2a26';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(400, 117, 7, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.moveTo(400, 131);
+      ctx.quadraticCurveTo(396, 142, 402, 150);
+      ctx.stroke();
     },
   },
   {
@@ -400,47 +499,47 @@ function lantern(ctx, x, y, color, glow) {
 }
 
 function paintMarket(ctx, altered, t) {
-  const sky = ctx.createLinearGradient(0, 0, 0, 470);
-  sky.addColorStop(0, '#141b33');
-  sky.addColorStop(1, '#2a3560');
-  ctx.fillStyle = sky;
+  // Bright daytime street: blue sky, smiling sun, bunting and balloons.
+  ctx.fillStyle = daySky(ctx);
   ctx.fillRect(0, 0, 560, 470);
-  ctx.fillStyle = '#f2f4f8';
-  for (const [sx, sy, sr] of [[60, 50, 2], [140, 34, 1.5], [220, 70, 2], [330, 40, 1.5], [420, 90, 2], [40, 130, 1.5], [520, 130, 2], [260, 110, 1.5]]) {
-    ctx.beginPath();
-    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Full moon (the altered panel bites a crescent out of it).
-  ctx.fillStyle = '#f5eeda';
-  ctx.beginPath();
-  ctx.arc(478, 62, 30, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,0.08)';
-  ctx.beginPath();
-  ctx.arc(468, 54, 7, 0, Math.PI * 2);
-  ctx.arc(488, 72, 5, 0, Math.PI * 2);
-  ctx.fill();
-  // String lights sagging across the top.
-  ctx.strokeStyle = '#0e1428';
+  sun(ctx, 478, 62, 26, '#f2b705');
+  cloud(ctx, 90, 70, 0.9, '#ffffff');
+  cloud(ctx, 300, 44, 0.7, '#ffffff');
+  cloud(ctx, 180, 120, 0.6, '#f4fbff');
+  gull(ctx, 140, 90, '#33506b');
+  gull(ctx, 210, 60, '#33506b');
+  // Bunting flags strung across the street.
+  ctx.strokeStyle = '#2e2a26';
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(0, 96);
   ctx.quadraticCurveTo(280, 142, 560, 96);
   ctx.stroke();
+  const bunting = ['#ff6b4a', '#ffd166', '#39c26d', '#3f7dff', '#ff8fc7'];
   for (let i = 0; i < 9; i += 1) {
     const bx = 40 + i * 60;
     const by = 96 + Math.sin((bx / 560) * Math.PI) * 26;
-    const flicker = 0.75 + 0.25 * Math.sin(t * 3 + i * 1.7);
-    ctx.fillStyle = `rgba(255,209,102,${flicker})`;
+    ctx.fillStyle = bunting[i % bunting.length];
     ctx.beginPath();
-    ctx.arc(bx, by, 7, 0, Math.PI * 2);
+    ctx.moveTo(bx - 10, by);
+    ctx.lineTo(bx + 10, by);
+    ctx.lineTo(bx, by + 18);
+    ctx.closePath();
     ctx.fill();
   }
-  // Three stalls.
-  stall(ctx, 48, 130, '#e5534b', '#f7f4ec', '#7a4a2b');
-  stall(ctx, 232, 130, '#3f7dff', '#f7f4ec', '#7a4a2b');
-  stall(ctx, 416, 110, '#39c26d', '#f7f4ec', '#7a4a2b');
+  // A balloon tied to the first stall.
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 400, 117, 11, 14);
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(400, 131);
+  ctx.quadraticCurveTo(396, 142, 402, 150);
+  ctx.stroke();
+  // Three stalls with sunny awnings.
+  stall(ctx, 48, 130, '#ff6b4a', '#fff7e0', '#7a4a2b');
+  stall(ctx, 232, 130, '#3f7dff', '#fff7e0', '#7a4a2b');
+  stall(ctx, 416, 110, '#39c26d', '#fff7e0', '#7a4a2b');
   // Cat asleep on the middle stall roof.
   ctx.fillStyle = '#2b2b33';
   ellipse(ctx, 300, 168, 20, 9);
@@ -466,7 +565,7 @@ function paintMarket(ctx, altered, t) {
   ctx.font = 'bold 20px system-ui, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('TEA', 300, 263);
+  ctx.fillText('JUICE', 300, 263);
   // Lanterns.
   lantern(ctx, 96, 300, '#e5534b', true);
   lantern(ctx, 168, 300, '#e5534b', false);
@@ -489,7 +588,7 @@ function paintMarket(ctx, altered, t) {
   ctx.lineTo(318, 392);
   ctx.closePath();
   ctx.fill();
-  // Goods on the counters: oranges, jars, baskets.
+  // Goods on the counters: oranges, jars, baskets, flowers.
   ctx.fillStyle = '#ff8c42';
   for (const [ox, oy] of [[80, 292], [96, 292], [88, 280], [452, 360], [468, 360], [460, 348]]) {
     ctx.beginPath();
@@ -505,10 +604,13 @@ function paintMarket(ctx, altered, t) {
   ctx.fillStyle = '#f2f4f8';
   ctx.font = 'bold 12px system-ui, sans-serif';
   ctx.fillText('FRESH  •  HOT  •  SWEET', 300, 383);
-  // Cobblestones at the bottom.
-  ctx.fillStyle = '#1c2340';
+  flower(ctx, 60, 330, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 500, 330, 0.8, '#ff6b4a', '#ffd166');
+  flower(ctx, 520, 344, 0.7, '#ffd166', '#ff6b4a');
+  // Sunny cobblestones at the bottom.
+  ctx.fillStyle = '#f7e8c8';
   ctx.fillRect(0, 392, 560, 78);
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.strokeStyle = 'rgba(180,140,60,0.35)';
   ctx.lineWidth = 2;
   for (let i = 0; i < 8; i += 1) {
     ctx.beginPath();
@@ -518,8 +620,8 @@ function paintMarket(ctx, altered, t) {
   if (altered) for (const d of MARKET_DIFFS) d.apply(ctx, t);
 }
 
-// --- Level 3: Forest Camp ------------------------------------------------
-const FOREST_DIFFS = [
+// --- Level 3: Sunny Meadow ------------------------------------------------
+const MEADOW_DIFFS = [
   {
     id: 'tent-color', name: 'Tent colour', x: 280, y: 300, r: 40,
     apply(ctx) {
@@ -557,11 +659,7 @@ const FOREST_DIFFS = [
   {
     id: 'owl-missing', name: 'Owl', x: 96, y: 128, r: 28,
     apply(ctx) {
-      const sky = ctx.createLinearGradient(0, 0, 0, 300);
-      sky.addColorStop(0, '#2c4a6b');
-      sky.addColorStop(1, '#e8b06a');
-      ctx.fillStyle = sky;
-      ellipse(ctx, 96, 128, 22, 26);
+      skyPatch(ctx, 96, 128, 22);
       ctx.strokeStyle = '#5b3a1e';
       ctx.lineWidth = 8;
       ctx.lineCap = 'round';
@@ -574,104 +672,86 @@ const FOREST_DIFFS = [
   {
     id: 'mushroom-missing', name: 'Mushroom', x: 492, y: 418, r: 24,
     apply(ctx) {
-      ctx.fillStyle = '#3d7a34';
+      ctx.fillStyle = '#57b368';
       ellipse(ctx, 492, 418, 20, 12);
     },
   },
   {
     id: 'backpack-missing', name: 'Backpack', x: 168, y: 392, r: 28,
     apply(ctx) {
-      ctx.fillStyle = '#3d7a34';
+      ctx.fillStyle = '#57b368';
       ellipse(ctx, 168, 392, 26, 18);
     },
   },
   {
-    id: 'star-extra', name: 'Extra star', x: 448, y: 66, r: 24,
+    id: 'sun-ray', name: 'Sun ray', x: 448, y: 66, r: 26,
     apply(ctx) {
-      ctx.fillStyle = '#ffe9a8';
-      ctx.beginPath();
-      ctx.arc(448, 66, 4, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(448, 66, 9, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,233,168,0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      skyPatch(ctx, 448, 66, 18);
+      sun(ctx, 470, 60, 22, '#f2b705');
     },
   },
   {
     id: 'butterfly-color', name: 'Butterfly', x: 372, y: 150, r: 26,
     apply(ctx, t) {
-      const bx = 372 + Math.sin((t ?? 0) * 1.8) * 8;
-      const by = 150 + Math.cos((t ?? 0) * 2.3) * 6;
-      const sky = ctx.createLinearGradient(0, 0, 0, 300);
-      sky.addColorStop(0, '#2c4a6b');
-      sky.addColorStop(1, '#e8b06a');
-      ctx.fillStyle = sky;
-      ellipse(ctx, bx, by, 26, 20);
-      ctx.fillStyle = '#9b5de5';
-      ellipse(ctx, bx - 11, by, 10, 14);
-      ellipse(ctx, bx + 11, by, 10, 14);
-      ctx.fillStyle = '#5b3a1e';
-      ellipse(ctx, bx, by, 3, 10);
+      // The scene butterfly stays put (only its wings flutter), so the
+      // repaint must sit on the same spot, same flutter phase.
+      skyPatch(ctx, 372, 150, 26);
+      butterfly(ctx, 372, 150, 1, '#9b5de5', t);
     },
   },
   {
     id: 'log-missing', name: 'Fire log', x: 448, y: 396, r: 24,
     apply(ctx) {
-      ctx.fillStyle = '#3d7a34';
+      ctx.fillStyle = '#57b368';
       ctx.fillRect(434, 388, 34, 12);
     },
   },
   {
-    id: 'smoke-shape', name: 'Smoke curl', x: 428, y: 300, r: 30,
-    apply(ctx) {
-      ctx.fillStyle = '#8fa3bf';
-      ctx.beginPath();
-      ctx.arc(428, 300, 12, 0, Math.PI * 2);
-      ctx.arc(414, 282, 9, 0, Math.PI * 2);
-      ctx.arc(402, 266, 7, 0, Math.PI * 2);
-      ctx.fill();
-    },
+    id: 'cloud-extra', name: 'Extra cloud', x: 428, y: 300, r: 30,
+    apply(ctx) { cloud(ctx, 428, 300, 0.6, '#ffffff'); },
   },
   {
     id: 'boots-missing', name: 'Boots', x: 356, y: 392, r: 26,
     apply(ctx) {
-      ctx.fillStyle = '#3d7a34';
+      ctx.fillStyle = '#57b368';
       ellipse(ctx, 356, 392, 22, 12);
     },
   },
 ];
 
-function paintForest(ctx, altered, t) {
-  const sky = ctx.createLinearGradient(0, 0, 0, 300);
-  sky.addColorStop(0, '#2c4a6b');
-  sky.addColorStop(1, '#e8b06a');
-  ctx.fillStyle = sky;
+function paintMeadow(ctx, altered, t) {
+  // A bright sunny meadow: blue sky, big sun, flower-dotted green grass.
+  ctx.fillStyle = daySky(ctx);
   ctx.fillRect(0, 0, 560, 300);
-  ctx.fillStyle = '#ffe9a8';
-  for (const [sx, sy, sr] of [[70, 48, 2.5], [160, 80, 2], [250, 40, 2.5], [340, 70, 2], [500, 44, 2.5], [520, 110, 2]]) {
-    ctx.beginPath();
-    ctx.arc(sx, sy, sr, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  // Distant tree line and ground.
-  ctx.fillStyle = '#2f6b3a';
+  sun(ctx, 470, 60, 24, '#f2b705');
+  cloud(ctx, 90, 60, 0.9, '#ffffff');
+  cloud(ctx, 260, 44, 0.7, '#ffffff');
+  cloud(ctx, 380, 110, 0.6, '#f4fbff');
+  gull(ctx, 150, 80, '#33506b');
+  gull(ctx, 220, 110, '#33506b');
+  // Rolling green hills and a flower meadow.
+  ctx.fillStyle = '#57b368';
   ctx.beginPath();
   ctx.moveTo(0, 300);
   for (let x = 0; x <= 560; x += 40) ctx.lineTo(x, 268 + ((x * 7) % 23));
   ctx.lineTo(560, 300);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#3d7a34';
+  ctx.fillStyle = '#6fce7e';
   ctx.fillRect(0, 300, 560, 170);
-  ctx.fillStyle = '#356b2d';
+  ctx.fillStyle = '#57b368';
   ellipse(ctx, 120, 430, 90, 18);
   ellipse(ctx, 460, 440, 110, 20);
+  flower(ctx, 60, 420, 0.9, '#ff8fc7', '#ffd166');
+  flower(ctx, 120, 380, 0.8, '#ffd166', '#ff6b4a');
+  flower(ctx, 200, 430, 0.9, '#ffffff', '#ffd166');
+  flower(ctx, 470, 400, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 530, 430, 0.9, '#ffd166', '#ff6b4a');
+  flower(ctx, 30, 360, 0.7, '#ffffff', '#ff8fc7');
   // Big pines left and right.
-  pine(ctx, 70, 300, 1.5, '#2f6b3a');
-  pine(ctx, 510, 310, 1.3, '#2a5e33');
-  pine(ctx, 150, 260, 0.9, '#357a40');
+  pine(ctx, 70, 300, 1.5, '#2f9e44');
+  pine(ctx, 510, 310, 1.3, '#2a8a3a');
+  pine(ctx, 150, 260, 0.9, '#35b04a');
   // Branch with the owl.
   ctx.strokeStyle = '#5b3a1e';
   ctx.lineWidth = 8;
@@ -767,7 +847,7 @@ function paintForest(ctx, altered, t) {
   ctx.quadraticCurveTo(438, 370, 428, 382);
   ctx.quadraticCurveTo(418, 370, 428, 358);
   ctx.fill();
-  ctx.fillStyle = 'rgba(200,210,225,0.75)';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.beginPath();
   ctx.arc(428 + Math.sin(t * 1.4) * 6, 306, 12, 0, Math.PI * 2);
   ctx.arc(440 + Math.sin(t * 1.4) * 6, 288, 9, 0, Math.PI * 2);
@@ -786,13 +866,8 @@ function paintForest(ctx, altered, t) {
   ctx.beginPath();
   ctx.arc(510, 410, 8, Math.PI, 0);
   ctx.fill();
-  const bx = 372 + Math.sin(t * 1.8) * 8;
-  const by = 150 + Math.cos(t * 2.3) * 6;
-  ctx.fillStyle = '#ffd166';
-  ellipse(ctx, bx - 11, by, 10, 14);
-  ellipse(ctx, bx + 11, by, 10, 14);
-  ctx.fillStyle = '#5b3a1e';
-  ellipse(ctx, bx, by, 3, 10);
+  butterfly(ctx, 372, 150, 1, '#ffd166', t);
+  butterfly(ctx, 90, 220, 0.8, '#ff8fc7', t + 2);
   ctx.strokeStyle = '#7fb3d5';
   ctx.lineWidth = 10;
   ctx.lineCap = 'round';
@@ -800,11 +875,1935 @@ function paintForest(ctx, altered, t) {
   ctx.moveTo(0, 452);
   ctx.quadraticCurveTo(280, 436, 560, 452);
   ctx.stroke();
-  if (altered) for (const d of FOREST_DIFFS) d.apply(ctx, t);
+  if (altered) for (const d of MEADOW_DIFFS) d.apply(ctx, t);
 }
 
-const PAINTERS = [paintHarbor, paintMarket, paintForest];
-const DIFF_SETS = [HARBOR_DIFFS, MARKET_DIFFS, FOREST_DIFFS];
+// --- Level 4: Rainbow Garden ---------------------------------------------
+const GARDEN_DIFFS = [
+  {
+    id: 'rainbow-band', name: 'Rainbow band', x: 280, y: 140, r: 30,
+    apply(ctx) {
+      ctx.strokeStyle = '#ff8fc7';
+      ctx.lineWidth = 16;
+      ctx.beginPath();
+      ctx.arc(280, 320, 177, Math.PI * 1.35, Math.PI * 1.65);
+      ctx.stroke();
+    },
+  },
+  {
+    id: 'sunflower-missing', name: 'Sunflower', x: 470, y: 390, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ellipse(ctx, 470, 390, 26, 30);
+    },
+  },
+  {
+    id: 'birdhouse-door', name: 'Birdhouse door', x: 90, y: 205, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#2e2a26';
+      ctx.fillRect(83, 198, 14, 14);
+    },
+  },
+  {
+    id: 'watering-can', name: 'Watering can', x: 430, y: 380, r: 28,
+    apply(ctx) {
+      ctx.fillStyle = '#ff6b4a';
+      ctx.beginPath();
+      ctx.ellipse(430, 380, 24, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ff6b4a';
+      ctx.fillRect(448, 372, 22, 6);
+    },
+  },
+  {
+    id: 'bee-missing', name: 'Bee', x: 350, y: 90, r: 22,
+    apply(ctx) { skyPatch(ctx, 350, 90, 14); },
+  },
+  {
+    id: 'tulip-color', name: 'Tulip', x: 150, y: 350, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#3f7dff';
+      ellipse(ctx, 150, 342, 9, 12);
+      ellipse(ctx, 143, 348, 7, 10);
+      ellipse(ctx, 157, 348, 7, 10);
+    },
+  },
+  {
+    id: 'fence-plank', name: 'Fence plank', x: 250, y: 305, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ctx.fillRect(242, 288, 16, 34);
+    },
+  },
+  {
+    id: 'butterfly-color', name: 'Butterfly', x: 300, y: 180, r: 26,
+    apply(ctx, t) {
+      // Same spot and flutter phase as the scene butterfly, only purple.
+      skyPatch(ctx, 300, 180, 26);
+      butterfly(ctx, 300, 180, 1, '#9b5de5', t);
+    },
+  },
+];
+
+function paintGarden(ctx, altered, t) {
+  // A flower garden under a big rainbow: beds, fence, birdhouse, bees.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 300);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  cloud(ctx, 90, 70, 0.9, '#ffffff');
+  cloud(ctx, 400, 40, 0.6, '#ffffff');
+  gull(ctx, 180, 90, '#33506b');
+  // Rainbow arcs over the garden.
+  const bands = ['#ff6b4a', '#ff9f43', '#ffd166', '#39c26d', '#3f7dff', '#9b5de5'];
+  for (let i = 0; i < 6; i += 1) {
+    ctx.strokeStyle = bands[i];
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(280, 320, 200 - i * 15, Math.PI, 0);
+    ctx.stroke();
+  }
+  // Green lawn with flower beds.
+  ctx.fillStyle = '#6fce7e';
+  ctx.fillRect(0, 300, 560, 170);
+  ctx.fillStyle = '#57b368';
+  ellipse(ctx, 120, 440, 100, 18);
+  ellipse(ctx, 460, 445, 110, 18);
+  // Picket fence across the lawn.
+  ctx.fillStyle = '#fffdf5';
+  for (let x = 30; x <= 530; x += 26) {
+    ctx.fillRect(x, 288, 14, 34);
+    ctx.beginPath();
+    ctx.moveTo(x, 288);
+    ctx.lineTo(x + 7, 278);
+    ctx.lineTo(x + 14, 288);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(24, 300, 512, 5);
+  // Flower rows: tulips, daisies, sunflowers.
+  flower(ctx, 90, 350, 0.9, '#ff6b4a', '#ffd166');
+  flower(ctx, 150, 350, 0.9, '#ff6b4a', '#ffd166');
+  flower(ctx, 210, 350, 0.9, '#ff8fc7', '#ffd166');
+  flower(ctx, 270, 350, 0.9, '#ffffff', '#ffd166');
+  flower(ctx, 330, 350, 0.9, '#ff8fc7', '#ffd166');
+  flower(ctx, 390, 350, 0.9, '#ff6b4a', '#ffd166');
+  // Sunflowers along the back.
+  for (const sx of [60, 470, 520]) {
+    ctx.strokeStyle = '#2f9e44';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sx, 400);
+    ctx.lineTo(sx, 372);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd166';
+    for (let i = 0; i < 8; i += 1) {
+      const a = (i / 8) * Math.PI * 2;
+      ellipse(ctx, sx + Math.cos(a) * 10, 366 + Math.sin(a) * 10, 6, 6);
+    }
+    ctx.fillStyle = '#7a4a2b';
+    ctx.beginPath();
+    ctx.arc(sx, 366, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Birdhouse on a pole.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(86, 216, 8, 70);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.fillRect(66, 180, 48, 38);
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(62, 180);
+  ctx.lineTo(90, 162);
+  ctx.lineTo(118, 180);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(90, 205, 7, 0, Math.PI * 2);
+  ctx.fill();
+  // Watering can and wheelbarrow.
+  ctx.fillStyle = '#39c26d';
+  ctx.beginPath();
+  ctx.ellipse(430, 380, 24, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillRect(448, 372, 22, 6);
+  ctx.fillStyle = '#2f9e44';
+  ctx.fillRect(408, 366, 8, 8);
+  ctx.fillStyle = '#8a5a2b';
+  ctx.beginPath();
+  ctx.moveTo(160, 410);
+  ctx.lineTo(230, 410);
+  ctx.lineTo(220, 436);
+  ctx.lineTo(170, 436);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#5b3a1e';
+  ctx.beginPath();
+  ctx.arc(170, 436, 7, 0, Math.PI * 2);
+  ctx.arc(220, 436, 7, 0, Math.PI * 2);
+  ctx.fill();
+  flower(ctx, 185, 404, 0.7, '#ff8fc7', '#ffd166');
+  flower(ctx, 205, 404, 0.7, '#ffd166', '#ff6b4a');
+  // Bees and butterflies.
+  for (const [bx, by] of [[200, 120], [350, 90]]) {
+    ctx.fillStyle = '#ffd166';
+    ellipse(ctx, bx, by, 7, 5);
+    ctx.strokeStyle = '#2e2a26';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx - 2, by - 4);
+    ctx.lineTo(bx - 2, by + 4);
+    ctx.moveTo(bx + 2, by - 4);
+    ctx.lineTo(bx + 2, by + 4);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ellipse(ctx, bx - 3, by - 7, 4, 3);
+    ellipse(ctx, bx + 3, by - 7, 4, 3);
+  }
+  butterfly(ctx, 300, 180, 1, '#ffd166', t);
+  butterfly(ctx, 450, 150, 0.8, '#ff8fc7', t + 3);
+  // Stepping stones.
+  ctx.fillStyle = '#fffdf5';
+  for (const [sx, sy] of [[270, 440], [300, 452], [330, 440], [360, 452]]) {
+    ellipse(ctx, sx, sy, 16, 7);
+  }
+  if (altered) for (const d of GARDEN_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 5: Beach Party -------------------------------------------------
+const BEACH_DIFFS = [
+  {
+    id: 'umbrella-stripe', name: 'Umbrella stripe', x: 140, y: 270, r: 30,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ctx.beginPath();
+      ctx.moveTo(140, 252);
+      ctx.lineTo(168, 252);
+      ctx.lineTo(154, 282);
+      ctx.lineTo(140, 282);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'crab-missing', name: 'Crab', x: 200, y: 430, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#ffe1a0';
+      ellipse(ctx, 200, 430, 26, 16);
+    },
+  },
+  {
+    id: 'starfish-color', name: 'Starfish', x: 480, y: 440, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#ff8fc7';
+      ctx.beginPath();
+      for (let i = 0; i < 5; i += 1) {
+        const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+        const a2 = a + Math.PI / 5;
+        ctx.lineTo(480 + Math.cos(a) * 16, 440 + Math.sin(a) * 16);
+        ctx.lineTo(480 + Math.cos(a2) * 7, 440 + Math.sin(a2) * 7);
+      }
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'surfboard-stripe', name: 'Surfboard stripe', x: 500, y: 330, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#ff6b4a';
+      ctx.fillRect(492, 318, 16, 10);
+    },
+  },
+  {
+    id: 'castle-flag', name: 'Sandcastle flag', x: 300, y: 365, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#ffe1a0';
+      ctx.fillRect(292, 348, 22, 24);
+    },
+  },
+  {
+    id: 'ball-stripe', name: 'Beach ball stripe', x: 420, y: 400, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#39c26d';
+      ctx.beginPath();
+      ctx.moveTo(420, 378);
+      ctx.lineTo(438, 392);
+      ctx.lineTo(420, 414);
+      ctx.lineTo(404, 400);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'palm-coconuts', name: 'Palm coconuts', x: 520, y: 290, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#7ec8f7';
+      ctx.beginPath();
+      ctx.arc(514, 292, 10, 0, Math.PI * 2);
+      ctx.arc(528, 294, 10, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'icecream-scoop', name: 'Ice cream scoop', x: 90, y: 360, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#7fe0a8';
+      ctx.beginPath();
+      ctx.arc(90, 356, 10, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'towel-stripe', name: 'Towel stripe', x: 250, y: 430, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ctx.fillRect(226, 420, 48, 8);
+    },
+  },
+];
+
+function paintBeach(ctx, altered, t) {
+  // A sunny beach party: blue sea, golden sand, umbrella, castle, cart.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 260);
+  sun(ctx, 480, 58, 26, '#f2b705');
+  cloud(ctx, 90, 70, 0.9, '#ffffff');
+  cloud(ctx, 280, 44, 0.7, '#ffffff');
+  gull(ctx, 160, 90, '#33506b');
+  gull(ctx, 230, 60, '#33506b');
+  const sea = ctx.createLinearGradient(0, 260, 0, 360);
+  sea.addColorStop(0, '#4fc3f7');
+  sea.addColorStop(1, '#2f9fd8');
+  ctx.fillStyle = sea;
+  ctx.fillRect(0, 260, 560, 100);
+  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+  ctx.lineWidth = 2;
+  for (const [wx, wy, wl] of [[60, 300, 80], [240, 330, 90], [420, 300, 70]]) {
+    ctx.beginPath();
+    ctx.moveTo(wx, wy);
+    ctx.quadraticCurveTo(wx + wl / 2, wy - 6, wx + wl, wy);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ffe1a0';
+  ctx.fillRect(0, 360, 560, 110);
+  ctx.fillStyle = '#f5cf7d';
+  ellipse(ctx, 100, 440, 90, 12);
+  ellipse(ctx, 470, 455, 110, 12);
+  // Striped beach umbrella.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(138, 282, 4, 90);
+  const umbrella = ['#ff6b4a', '#fffdf5', '#ffd166', '#fffdf5', '#3f7dff'];
+  for (let i = 0; i < 5; i += 1) {
+    ctx.fillStyle = umbrella[i];
+    ctx.beginPath();
+    ctx.moveTo(140, 252);
+    ctx.lineTo(92 + i * 19, 282);
+    ctx.lineTo(92 + (i + 1) * 19, 282);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(140, 250, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // Sandcastle with a flag.
+  ctx.fillStyle = '#f5cf7d';
+  ctx.fillRect(272, 380, 56, 44);
+  ctx.fillStyle = '#e8b96a';
+  ctx.fillRect(262, 396, 16, 28);
+  ctx.fillRect(332, 396, 16, 28);
+  ctx.fillStyle = '#f5cf7d';
+  ctx.beginPath();
+  ctx.arc(300, 380, 14, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#5b3a1e';
+  ctx.fillRect(298, 348, 3, 32);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(301, 348);
+  ctx.lineTo(322, 354);
+  ctx.lineTo(301, 361);
+  ctx.closePath();
+  ctx.fill();
+  // Beach ball.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(420, 400, 22, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(420, 378);
+  ctx.lineTo(438, 392);
+  ctx.lineTo(420, 414);
+  ctx.lineTo(404, 400);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(420, 378);
+  ctx.lineTo(404, 400);
+  ctx.lineTo(420, 414);
+  ctx.lineTo(436, 402);
+  ctx.closePath();
+  ctx.fill();
+  // Surfboard stuck in the sand.
+  ctx.save();
+  ctx.translate(500, 330);
+  ctx.rotate(0.12);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 12, 44, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#3f7dff';
+  ctx.fillRect(-12, -8, 24, 10);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.fillRect(-12, 14, 24, 6);
+  ctx.restore();
+  // Crab on the sand.
+  ctx.fillStyle = '#ff6b4a';
+  ellipse(ctx, 200, 430, 16, 11);
+  ctx.beginPath();
+  ctx.arc(186, 420, 6, 0, Math.PI * 2);
+  ctx.arc(214, 420, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#ff6b4a';
+  ctx.lineWidth = 3;
+  for (const lx of [188, 196, 204, 212]) {
+    ctx.beginPath();
+    ctx.moveTo(lx, 440);
+    ctx.lineTo(lx - 4, 448);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(194, 426, 2, 0, Math.PI * 2);
+  ctx.arc(206, 426, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Starfish, shells and a striped towel.
+  ctx.fillStyle = '#ff9f43';
+  ctx.beginPath();
+  for (let i = 0; i < 5; i += 1) {
+    const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+    const a2 = a + Math.PI / 5;
+    ctx.lineTo(480 + Math.cos(a) * 16, 440 + Math.sin(a) * 16);
+    ctx.lineTo(480 + Math.cos(a2) * 7, 440 + Math.sin(a2) * 7);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.arc(60, 420, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(60, 420, 8, 0.6, Math.PI * 1.4);
+  ctx.stroke();
+  ctx.fillStyle = '#3f7dff';
+  ctx.fillRect(226, 420, 48, 20);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(226, 420, 48, 6);
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(226, 434, 48, 6);
+  // Ice cream cart with scoops.
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(60, 368, 60, 34);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.fillRect(60, 368, 60, 8);
+  ctx.fillStyle = '#5b3a1e';
+  ctx.beginPath();
+  ctx.arc(70, 402, 7, 0, Math.PI * 2);
+  ctx.arc(110, 402, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.arc(90, 356, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(78, 360, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('ICE CREAM', 90, 388);
+  // Palm tree with coconuts.
+  ctx.fillStyle = '#8a6b46';
+  ctx.beginPath();
+  ctx.moveTo(516, 360);
+  ctx.quadraticCurveTo(520, 320, 528, 296);
+  ctx.lineTo(534, 296);
+  ctx.quadraticCurveTo(528, 322, 524, 360);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2f9e44';
+  for (const [fx, fy, rot] of [[500, 288, -0.6], [528, 282, 0.2], [548, 296, 0.9], [508, 306, -1.2], [544, 312, 1.4]]) {
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.ellipse(18, 0, 22, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#7a4a2b';
+  ctx.beginPath();
+  ctx.arc(514, 292, 6, 0, Math.PI * 2);
+  ctx.arc(528, 294, 6, 0, Math.PI * 2);
+  ctx.fill();
+  // Bucket and spade.
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(352, 428);
+  ctx.lineTo(372, 428);
+  ctx.lineTo(368, 448);
+  ctx.lineTo(356, 448);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(378, 424, 4, 22);
+  ctx.beginPath();
+  ctx.moveTo(378, 424);
+  ctx.lineTo(392, 432);
+  ctx.lineTo(378, 438);
+  ctx.closePath();
+  ctx.fill();
+  if (altered) for (const d of BEACH_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 6: Sunny Farm --------------------------------------------------
+const FARM_DIFFS = [
+  {
+    id: 'barn-door', name: 'Barn door', x: 110, y: 250, r: 28,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ctx.fillRect(92, 228, 36, 46);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(92, 228, 36, 4);
+      ctx.fillRect(108, 228, 4, 46);
+    },
+  },
+  {
+    id: 'cow-spots', name: 'Cow spots', x: 280, y: 380, r: 30,
+    apply(ctx) {
+      ctx.fillStyle = '#ffffff';
+      ellipse(ctx, 268, 372, 14, 10);
+    },
+  },
+  {
+    id: 'chicken-missing', name: 'Chicken', x: 180, y: 430, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ellipse(ctx, 180, 430, 20, 12);
+    },
+  },
+  {
+    id: 'sunflower-missing', name: 'Sunflower', x: 450, y: 420, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ellipse(ctx, 450, 420, 20, 22);
+    },
+  },
+  {
+    id: 'windmill-blade', name: 'Windmill blade', x: 480, y: 190, r: 26,
+    apply(ctx) {
+      skyPatch(ctx, 470, 172, 20);
+    },
+  },
+  {
+    id: 'hay-bale', name: 'Hay bale', x: 350, y: 420, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ellipse(ctx, 350, 420, 26, 16);
+    },
+  },
+  {
+    id: 'tractor-wheel', name: 'Tractor wheel', x: 140, y: 420, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath();
+      ctx.arc(140, 420, 12, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#2e2a26';
+      ctx.beginPath();
+      ctx.arc(140, 420, 4, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'duck-missing', name: 'Duck', x: 500, y: 440, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#4fc3f7';
+      ellipse(ctx, 500, 440, 20, 10);
+    },
+  },
+];
+
+function paintFarm(ctx, altered, t) {
+  // A sunny farm: red barn, windmill, cow, chickens, sunflowers, pond.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 280);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  cloud(ctx, 90, 60, 0.9, '#ffffff');
+  cloud(ctx, 300, 40, 0.7, '#ffffff');
+  cloud(ctx, 200, 110, 0.6, '#f4fbff');
+  gull(ctx, 150, 80, '#33506b');
+  // Green fields and a dirt path.
+  ctx.fillStyle = '#6fce7e';
+  ctx.fillRect(0, 280, 560, 190);
+  ctx.fillStyle = '#57b368';
+  ellipse(ctx, 120, 450, 110, 16);
+  ellipse(ctx, 460, 455, 120, 16);
+  ctx.fillStyle = '#e8c98a';
+  ctx.beginPath();
+  ctx.moveTo(0, 470);
+  ctx.lineTo(0, 440);
+  ctx.quadraticCurveTo(280, 420, 560, 446);
+  ctx.lineTo(560, 470);
+  ctx.closePath();
+  ctx.fill();
+  // Red barn with white trim.
+  ctx.fillStyle = '#e5534b';
+  ctx.fillRect(60, 200, 100, 80);
+  ctx.beginPath();
+  ctx.moveTo(50, 200);
+  ctx.lineTo(110, 158);
+  ctx.lineTo(170, 200);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(92, 228, 36, 46);
+  ctx.fillRect(92, 228, 36, 4);
+  ctx.fillRect(108, 228, 4, 46);
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(100, 176, 20, 16);
+  ctx.strokeStyle = '#fffdf5';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(100, 176, 20, 16);
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(110, 150, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // Windmill.
+  ctx.fillStyle = '#f2f4f8';
+  ctx.beginPath();
+  ctx.moveTo(462, 280);
+  ctx.lineTo(474, 200);
+  ctx.lineTo(490, 200);
+  ctx.lineTo(502, 280);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#e5534b';
+  ctx.beginPath();
+  ctx.moveTo(474, 200);
+  ctx.lineTo(482, 182);
+  ctx.lineTo(490, 200);
+  ctx.closePath();
+  ctx.fill();
+  const blade = Math.sin(t * 0.8) * 0.2;
+  ctx.save();
+  ctx.translate(482, 192);
+  ctx.rotate(blade);
+  ctx.fillStyle = '#fffdf5';
+  for (let i = 0; i < 4; i += 1) {
+    ctx.save();
+    ctx.rotate((i / 4) * Math.PI * 2);
+    ctx.fillRect(-3, -34, 6, 30);
+    ctx.restore();
+  }
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(0, 0, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+  // Wooden fence.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(0, 300, 560, 5);
+  ctx.fillRect(0, 318, 560, 5);
+  for (let x = 20; x <= 540; x += 60) ctx.fillRect(x, 292, 8, 36);
+  // Cow grazing.
+  ctx.fillStyle = '#ffffff';
+  ellipse(ctx, 280, 380, 34, 22);
+  ctx.beginPath();
+  ctx.arc(312, 366, 14, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ellipse(ctx, 268, 372, 12, 9);
+  ellipse(ctx, 292, 390, 9, 7);
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(318, 360, 4, 0, Math.PI * 2);
+  ctx.arc(326, 360, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 318, 374, 7, 5);
+  ctx.fillStyle = '#2e2a26';
+  ctx.fillRect(252, 396, 6, 14);
+  ctx.fillRect(268, 398, 6, 14);
+  ctx.fillRect(292, 398, 6, 14);
+  ctx.fillRect(306, 396, 6, 14);
+  // Chickens pecking.
+  for (const [cx, cy] of [[180, 430], [220, 440]]) {
+    ctx.fillStyle = '#fffdf5';
+    ellipse(ctx, cx, cy, 12, 9);
+    ctx.beginPath();
+    ctx.arc(cx + 10, cy - 8, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff6b4a';
+    ctx.beginPath();
+    ctx.moveTo(cx + 8, cy - 14);
+    ctx.lineTo(cx + 12, cy - 18);
+    ctx.lineTo(cx + 14, cy - 13);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#ff9f43';
+    ctx.beginPath();
+    ctx.moveTo(cx + 16, cy - 8);
+    ctx.lineTo(cx + 22, cy - 6);
+    ctx.lineTo(cx + 16, cy - 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Sunflowers.
+  for (const sx of [420, 450, 480]) {
+    ctx.strokeStyle = '#2f9e44';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(sx, 440);
+    ctx.lineTo(sx, 412);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd166';
+    for (let i = 0; i < 8; i += 1) {
+      const a = (i / 8) * Math.PI * 2;
+      ellipse(ctx, sx + Math.cos(a) * 10, 406 + Math.sin(a) * 10, 6, 6);
+    }
+    ctx.fillStyle = '#7a4a2b';
+    ctx.beginPath();
+    ctx.arc(sx, 406, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Hay bales.
+  ctx.fillStyle = '#ffd166';
+  ellipse(ctx, 350, 420, 24, 15);
+  ellipse(ctx, 384, 430, 20, 12);
+  ctx.strokeStyle = '#e8b96a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(350, 420, 18, 10, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Red tractor.
+  ctx.fillStyle = '#e5534b';
+  ctx.fillRect(96, 392, 70, 26);
+  ctx.fillRect(130, 372, 30, 22);
+  ctx.fillStyle = '#7ec8f7';
+  ctx.fillRect(134, 376, 22, 14);
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(112, 420, 12, 0, Math.PI * 2);
+  ctx.arc(150, 420, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#f2f4f8';
+  ctx.beginPath();
+  ctx.arc(112, 420, 5, 0, Math.PI * 2);
+  ctx.arc(150, 420, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(166, 392);
+  ctx.lineTo(166, 368);
+  ctx.stroke();
+  // Pond with a duck.
+  ctx.fillStyle = '#4fc3f7';
+  ellipse(ctx, 500, 440, 34, 12);
+  ctx.fillStyle = '#ffd166';
+  ellipse(ctx, 500, 436, 10, 7);
+  ctx.beginPath();
+  ctx.arc(508, 430, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff9f43';
+  ctx.beginPath();
+  ctx.moveTo(512, 430);
+  ctx.lineTo(518, 432);
+  ctx.lineTo(512, 434);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(509, 428, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  if (altered) for (const d of FARM_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 7: Candy Town --------------------------------------------------
+const CANDY_DIFFS = [
+  {
+    id: 'lollipop-color', name: 'Lollipop swirl', x: 60, y: 140, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#3f7dff';
+      ctx.beginPath();
+      ctx.arc(60, 140, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(60, 140, 12, 0.4, Math.PI * 1.4);
+      ctx.stroke();
+    },
+  },
+  {
+    id: 'gumdrop-missing', name: 'Gumdrop', x: 300, y: 440, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#fff0f5';
+      ellipse(ctx, 300, 440, 20, 12);
+    },
+  },
+  {
+    id: 'shop-sign', name: 'Shop sign', x: 280, y: 240, r: 28,
+    apply(ctx) {
+      ctx.fillStyle = '#2c2118';
+      ctx.fillRect(244, 224, 72, 32);
+      ctx.fillStyle = '#ffd166';
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('COOKIE', 280, 241);
+    },
+  },
+  {
+    id: 'cane-stripe', name: 'Candy cane stripe', x: 200, y: 300, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#39c26d';
+      ctx.fillRect(196, 288, 8, 12);
+    },
+  },
+  {
+    id: 'frosting-drip', name: 'Frosting drip', x: 120, y: 220, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#ff8fc7';
+      ctx.fillRect(112, 210, 16, 18);
+    },
+  },
+  {
+    id: 'jellybean-color', name: 'Jellybean', x: 150, y: 400, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#9b5de5';
+      ellipse(ctx, 150, 400, 8, 6);
+    },
+  },
+  {
+    id: 'window-count', name: 'House window', x: 440, y: 240, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#7fe0a8';
+      ctx.fillRect(428, 228, 24, 24);
+    },
+  },
+  {
+    id: 'chimney-smoke', name: 'Chimney smoke', x: 100, y: 180, r: 22,
+    apply(ctx) { skyPatch(ctx, 100, 180, 16); },
+  },
+  {
+    id: 'cotton-cloud', name: 'Cotton cloud', x: 300, y: 80, r: 26,
+    apply(ctx) {
+      cloud(ctx, 300, 80, 0.9, '#aee3ff');
+    },
+  },
+];
+
+function lollipopTree(ctx, x, y, color) {
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(x - 3, y, 6, 60);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y - 14, 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(x, y - 14, 12, 0.4, Math.PI * 1.4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(x, y - 14, 5, 2.2, Math.PI * 0.6);
+  ctx.stroke();
+}
+
+function paintCandy(ctx, altered, t) {
+  // A candy town: frosting-roofed houses, lollipop trees, a cupcake
+  // shop, candy-cane lamps and a gumdrop path.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 280);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  // Cotton-candy cloud.
+  cloud(ctx, 300, 80, 0.9, '#ffd6e8');
+  cloud(ctx, 120, 60, 0.7, '#ffffff');
+  gull(ctx, 200, 100, '#33506b');
+  // Pink lawn.
+  ctx.fillStyle = '#ffe3ef';
+  ctx.fillRect(0, 280, 560, 190);
+  ctx.fillStyle = '#ffd6e8';
+  ellipse(ctx, 100, 450, 100, 14);
+  ellipse(ctx, 460, 452, 110, 14);
+  // Left house: pink with frosting roof and a gumdrop chimney.
+  ctx.fillStyle = '#ff8fc7';
+  ctx.fillRect(80, 220, 100, 70);
+  ctx.fillStyle = '#fffdf5';
+  ctx.beginPath();
+  ctx.moveTo(70, 220);
+  ctx.lineTo(130, 178);
+  ctx.lineTo(190, 220);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 100, 222, 10, 6);
+  ellipse(ctx, 130, 222, 10, 6);
+  ellipse(ctx, 160, 222, 10, 6);
+  ctx.fillStyle = '#e5534b';
+  ctx.fillRect(150, 186, 14, 26);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.arc(100, 180, 9, 0, Math.PI * 2);
+  ctx.arc(108, 168, 7, 0, Math.PI * 2);
+  ctx.arc(114, 158, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#7ec8f7';
+  ctx.fillRect(96, 244, 22, 22);
+  ctx.fillRect(142, 244, 22, 22);
+  ctx.fillStyle = '#2e2a26';
+  ctx.fillRect(122, 256, 16, 34);
+  // Cupcake shop in the middle.
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(240, 220, 90, 70);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(232, 220);
+  ctx.lineTo(285, 182);
+  ctx.lineTo(338, 220);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2c2118';
+  ctx.fillRect(244, 224, 72, 32);
+  ctx.fillStyle = '#ffd166';
+  ctx.font = 'bold 15px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('CUPCAKE', 280, 241);
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(258, 264, 54, 26);
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.arc(285, 264, 12, Math.PI, 0);
+  ctx.fill();
+  // Right house: mint with a round window.
+  ctx.fillStyle = '#7fe0a8';
+  ctx.fillRect(400, 220, 100, 70);
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.moveTo(392, 220);
+  ctx.lineTo(450, 182);
+  ctx.lineTo(508, 220);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#7ec8f7';
+  ctx.beginPath();
+  ctx.arc(450, 240, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(436, 262, 28, 28);
+  // Lollipop trees.
+  lollipopTree(ctx, 60, 140, '#ff6b4a');
+  lollipopTree(ctx, 520, 150, '#3f7dff');
+  // Candy-cane lampposts.
+  for (const lx of [200, 360]) {
+    ctx.fillStyle = '#fffdf5';
+    ctx.fillRect(lx - 4, 280, 8, 60);
+    ctx.fillStyle = '#e5534b';
+    ctx.fillRect(lx - 4, 288, 8, 8);
+    ctx.fillRect(lx - 4, 304, 8, 8);
+    ctx.fillRect(lx - 4, 320, 8, 8);
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.arc(lx, 272, 10, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Jellybean bushes.
+  for (const [jx, jy] of [[150, 400], [420, 410]]) {
+    ctx.fillStyle = '#2f9e44';
+    ellipse(ctx, jx, jy, 26, 16);
+    const beans = ['#ff6b4a', '#ffd166', '#3f7dff', '#ff8fc7'];
+    beans.forEach((c, i) => {
+      ctx.fillStyle = c;
+      ellipse(ctx, jx - 16 + i * 10, jy - 6 + (i % 2) * 8, 5, 4);
+    });
+  }
+  // Gumdrop path.
+  const drops = ['#ff6b4a', '#ffd166', '#39c26d', '#3f7dff', '#ff8fc7'];
+  for (let i = 0; i < 5; i += 1) {
+    ctx.fillStyle = drops[i];
+    ctx.beginPath();
+    ctx.arc(240 + i * 30, 440, 11, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(240 + i * 30 - 11, 440, 22, 6);
+  }
+  if (altered) for (const d of CANDY_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 8: Butterfly Meadow -------------------------------------------
+const BUTTERFLY_DIFFS = [
+  {
+    id: 'butterfly-color', name: 'Butterfly', x: 200, y: 140, r: 26,
+    apply(ctx, t) {
+      // Same spot and flutter phase as the scene butterfly, only purple.
+      skyPatch(ctx, 200, 140, 26);
+      butterfly(ctx, 200, 140, 1, '#9b5de5', t);
+    },
+  },
+  {
+    id: 'ladybug-spots', name: 'Ladybug spots', x: 120, y: 380, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#e5484d';
+      ellipse(ctx, 120, 380, 14, 11);
+    },
+  },
+  {
+    id: 'frog-missing', name: 'Frog', x: 470, y: 420, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#4fc3f7';
+      ellipse(ctx, 470, 420, 22, 12);
+    },
+  },
+  {
+    id: 'daisy-missing', name: 'Daisy', x: 300, y: 400, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#6fce7e';
+      ellipse(ctx, 300, 400, 18, 14);
+    },
+  },
+  {
+    id: 'bee-missing', name: 'Bee', x: 350, y: 100, r: 20,
+    apply(ctx) { skyPatch(ctx, 350, 100, 14); },
+  },
+  {
+    id: 'mushroom-cap', name: 'Mushroom cap', x: 90, y: 430, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#3f7dff';
+      ctx.beginPath();
+      ctx.arc(90, 428, 11, Math.PI, 0);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'pond-lily', name: 'Lily pad', x: 440, y: 430, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#4fc3f7';
+      ellipse(ctx, 440, 430, 16, 8);
+    },
+  },
+];
+
+function paintButterflyMeadow(ctx, altered, t) {
+  // A daisy meadow full of butterflies, bees, a ladybug and a frog pond.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 280);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  cloud(ctx, 90, 60, 0.9, '#ffffff');
+  cloud(ctx, 300, 44, 0.7, '#ffffff');
+  cloud(ctx, 420, 120, 0.6, '#f4fbff');
+  gull(ctx, 160, 90, '#33506b');
+  ctx.fillStyle = '#6fce7e';
+  ctx.fillRect(0, 280, 560, 190);
+  ctx.fillStyle = '#57b368';
+  ellipse(ctx, 120, 450, 110, 16);
+  ellipse(ctx, 460, 452, 120, 16);
+  // Daisies everywhere.
+  for (const [dx, dy, ds] of [[60, 330, 0.9], [140, 380, 0.8], [220, 330, 0.9], [300, 400, 0.9], [380, 340, 0.8], [460, 360, 0.9], [520, 400, 0.8], [100, 440, 0.8], [250, 440, 0.9]]) {
+    flower(ctx, dx, dy, ds, '#ffffff', '#ffd166');
+  }
+  flower(ctx, 180, 420, 0.8, '#ff8fc7', '#ffd166');
+  flower(ctx, 340, 430, 0.8, '#ffd166', '#ff6b4a');
+  // Three butterflies dancing.
+  butterfly(ctx, 200, 140, 1, '#ffd166', t);
+  butterfly(ctx, 330, 180, 0.9, '#ff8fc7', t + 2);
+  butterfly(ctx, 450, 130, 0.8, '#3f7dff', t + 4);
+  // Bees.
+  for (const [bx, by] of [[350, 100], [260, 80]]) {
+    ctx.fillStyle = '#ffd166';
+    ellipse(ctx, bx, by, 7, 5);
+    ctx.strokeStyle = '#2e2a26';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(bx - 2, by - 4);
+    ctx.lineTo(bx - 2, by + 4);
+    ctx.moveTo(bx + 2, by - 4);
+    ctx.lineTo(bx + 2, by + 4);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ellipse(ctx, bx - 3, by - 7, 4, 3);
+    ellipse(ctx, bx + 3, by - 7, 4, 3);
+  }
+  // Ladybug on a leaf.
+  ctx.fillStyle = '#2f9e44';
+  ellipse(ctx, 120, 392, 20, 9);
+  ctx.fillStyle = '#e5484d';
+  ellipse(ctx, 120, 380, 14, 11);
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(114, 376, 2.5, 0, Math.PI * 2);
+  ctx.arc(126, 376, 2.5, 0, Math.PI * 2);
+  ctx.arc(120, 384, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(120, 370);
+  ctx.lineTo(120, 390);
+  ctx.stroke();
+  // Mushroom by the pond.
+  ctx.fillStyle = '#f2f4f8';
+  ctx.fillRect(87, 420, 5, 12);
+  ctx.fillStyle = '#e5534b';
+  ctx.beginPath();
+  ctx.arc(90, 418, 11, Math.PI, 0);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(86, 414, 2, 0, Math.PI * 2);
+  ctx.arc(94, 412, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Pond with a frog and lily pads.
+  ctx.fillStyle = '#4fc3f7';
+  ellipse(ctx, 460, 428, 46, 16);
+  ctx.fillStyle = '#2f9e44';
+  ellipse(ctx, 440, 430, 14, 7);
+  ellipse(ctx, 486, 434, 11, 6);
+  flower(ctx, 486, 430, 0.5, '#ff8fc7', '#ffd166');
+  ctx.fillStyle = '#39c26d';
+  ellipse(ctx, 470, 420, 12, 9);
+  ctx.beginPath();
+  ctx.arc(474, 412, 6, 0, Math.PI * 2);
+  ctx.arc(464, 412, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(473, 410, 2, 0, Math.PI * 2);
+  ctx.arc(465, 410, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(464, 418);
+  ctx.quadraticCurveTo(470, 421, 476, 418);
+  ctx.stroke();
+  if (altered) for (const d of BUTTERFLY_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 9: Toy Workshop -------------------------------------------------
+const TOY_DIFFS = [
+  {
+    id: 'teddy-bow', name: 'Teddy bow', x: 100, y: 380, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#39c26d';
+      ctx.beginPath();
+      ctx.moveTo(100, 368);
+      ctx.lineTo(88, 360);
+      ctx.lineTo(88, 376);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(100, 368);
+      ctx.lineTo(112, 360);
+      ctx.lineTo(112, 376);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'block-letter', name: 'Block letter', x: 300, y: 400, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#fffdf5';
+      ctx.fillRect(288, 388, 24, 24);
+      ctx.fillStyle = '#3f7dff';
+      ctx.font = 'bold 18px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('B', 300, 401);
+    },
+  },
+  {
+    id: 'train-chimney', name: 'Train smoke', x: 420, y: 400, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#ffe3c2';
+      ellipse(ctx, 420, 400, 16, 12);
+    },
+  },
+  {
+    id: 'kite-tail', name: 'Kite tail bow', x: 120, y: 170, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#fff3c4';
+      ctx.fillRect(112, 158, 16, 18);
+    },
+  },
+  {
+    id: 'balloon-color', name: 'Balloon', x: 500, y: 140, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ellipse(ctx, 500, 140, 12, 15);
+    },
+  },
+  {
+    id: 'robot-antenna', name: 'Robot antenna', x: 480, y: 330, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#fff3c4';
+      ctx.fillRect(474, 318, 12, 14);
+    },
+  },
+  {
+    id: 'horse-mane', name: 'Rocking horse mane', x: 250, y: 400, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#9b5de5';
+      ctx.beginPath();
+      ctx.moveTo(244, 388);
+      ctx.lineTo(258, 388);
+      ctx.lineTo(254, 408);
+      ctx.lineTo(246, 408);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'paint-jar', name: 'Paint jar', x: 200, y: 300, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#ffd166';
+      ctx.fillRect(192, 292, 16, 16);
+    },
+  },
+];
+
+function paintToy(ctx, altered, t) {
+  // A bright toy workshop: sunny window, workbench, teddy, train, kite.
+  ctx.fillStyle = '#fff3c4';
+  ctx.fillRect(0, 0, 560, 300);
+  ctx.fillStyle = '#ffe9a8';
+  ctx.fillRect(0, 0, 560, 40);
+  // Window with blue sky and sun.
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(380, 50, 140, 120);
+  ctx.fillStyle = '#7ec8f7';
+  ctx.fillRect(388, 58, 124, 104);
+  sun(ctx, 478, 84, 14, '#f2b705');
+  cloud(ctx, 420, 90, 0.5, '#ffffff');
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(446, 58, 8, 104);
+  ctx.fillRect(388, 106, 124, 8);
+  // Kite on the wall.
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(120, 110);
+  ctx.lineTo(150, 150);
+  ctx.lineTo(120, 190);
+  ctx.lineTo(90, 150);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(120, 110);
+  ctx.lineTo(150, 150);
+  ctx.lineTo(120, 150);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(120, 190);
+  ctx.quadraticCurveTo(130, 210, 120, 228);
+  ctx.stroke();
+  ctx.fillStyle = '#3f7dff';
+  ctx.beginPath();
+  ctx.moveTo(120, 204);
+  ctx.lineTo(112, 210);
+  ctx.lineTo(128, 210);
+  ctx.closePath();
+  ctx.fill();
+  // Balloons in the corner.
+  for (const [bx, by, bc] of [[500, 140, '#ff8fc7'], [520, 120, '#3f7dff'], [480, 118, '#ffd166']]) {
+    ctx.fillStyle = bc;
+    ellipse(ctx, bx, by, 12, 15);
+    ctx.strokeStyle = '#2e2a26';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bx, by + 15);
+    ctx.quadraticCurveTo(bx - 4, by + 30, bx + 2, by + 42);
+    ctx.stroke();
+  }
+  // Wooden floor and a round rug.
+  ctx.fillStyle = '#e8c98a';
+  ctx.fillRect(0, 300, 560, 170);
+  ctx.strokeStyle = 'rgba(120,80,20,0.25)';
+  ctx.lineWidth = 2;
+  for (let y = 320; y < 470; y += 30) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(560, y);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#ff8fc7';
+  ellipse(ctx, 280, 430, 130, 26);
+  ctx.fillStyle = '#ffd166';
+  ellipse(ctx, 280, 430, 90, 18);
+  // Workbench with paint jars and gears.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(160, 300, 160, 14);
+  ctx.fillRect(172, 314, 10, 40);
+  ctx.fillRect(298, 314, 10, 40);
+  const jars = ['#ff6b4a', '#3f7dff', '#39c26d'];
+  jars.forEach((c, i) => {
+    ctx.fillStyle = c;
+    ctx.fillRect(180 + i * 30, 282, 16, 18);
+    ctx.fillStyle = '#fffdf5';
+    ctx.fillRect(180 + i * 30, 282, 16, 4);
+  });
+  ctx.fillStyle = '#ffd166';
+  for (const [gx, gy] of [[330, 290], [348, 300]]) {
+    ctx.beginPath();
+    ctx.arc(gx, gy, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8a6b46';
+    ctx.beginPath();
+    ctx.arc(gx, gy, 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd166';
+  }
+  // Teddy bear with a red bow.
+  ctx.fillStyle = '#b07a45';
+  ellipse(ctx, 100, 396, 22, 20);
+  ctx.beginPath();
+  ctx.arc(100, 362, 16, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(86, 350, 7, 0, Math.PI * 2);
+  ctx.arc(114, 350, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#e8c98a';
+  ellipse(ctx, 100, 400, 12, 10);
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(94, 360, 2, 0, Math.PI * 2);
+  ctx.arc(106, 360, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(100, 368);
+  ctx.lineTo(88, 360);
+  ctx.lineTo(88, 376);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(100, 368);
+  ctx.lineTo(112, 360);
+  ctx.lineTo(112, 376);
+  ctx.closePath();
+  ctx.fill();
+  // ABC blocks.
+  const blocks = [['#ff6b4a', 'A', 288, 388], ['#3f7dff', 'B', 314, 388], ['#39c26d', 'C', 301, 362]];
+  for (const [bc, letter, bx, by] of blocks) {
+    ctx.fillStyle = bc;
+    ctx.fillRect(bx, by, 24, 24);
+    ctx.fillStyle = '#fffdf5';
+    ctx.font = 'bold 18px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(letter, bx + 12, by + 13);
+  }
+  // Rocking horse.
+  ctx.fillStyle = '#8a5a2b';
+  ctx.beginPath();
+  ctx.moveTo(230, 430);
+  ctx.quadraticCurveTo(280, 446, 330, 430);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#8a5a2b';
+  ctx.stroke();
+  ctx.fillStyle = '#fffdf5';
+  ellipse(ctx, 272, 400, 30, 16);
+  ctx.beginPath();
+  ctx.arc(296, 384, 10, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(244, 388);
+  ctx.lineTo(258, 388);
+  ctx.lineTo(254, 408);
+  ctx.lineTo(246, 408);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = '#8a5a2b';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(258, 414);
+  ctx.lineTo(258, 428);
+  ctx.moveTo(286, 414);
+  ctx.lineTo(286, 428);
+  ctx.stroke();
+  // Toy train.
+  ctx.fillStyle = '#e5534b';
+  ctx.fillRect(396, 396, 60, 26);
+  ctx.fillRect(456, 404, 44, 18);
+  ctx.fillStyle = '#2e2a26';
+  ctx.fillRect(400, 378, 10, 20);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.arc(420, 372, 8, 0, Math.PI * 2);
+  ctx.arc(428, 360, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(412, 422, 9, 0, Math.PI * 2);
+  ctx.arc(440, 422, 9, 0, Math.PI * 2);
+  ctx.arc(472, 422, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#7ec8f7';
+  ctx.fillRect(404, 402, 14, 12);
+  // Tin robot.
+  ctx.fillStyle = '#9aa5bd';
+  ctx.fillRect(462, 344, 36, 40);
+  ctx.beginPath();
+  ctx.arc(480, 330, 13, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#9aa5bd';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(480, 318);
+  ctx.lineTo(480, 308);
+  ctx.stroke();
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.arc(480, 306, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(475, 328, 3, 0, Math.PI * 2);
+  ctx.arc(485, 328, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.fillRect(470, 356, 20, 4);
+  ctx.fillRect(470, 364, 20, 4);
+  if (altered) for (const d of TOY_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 10: Fruit Festival ---------------------------------------------
+const FRUIT_DIFFS = [
+  {
+    id: 'watermelon-slice', name: 'Watermelon slice', x: 100, y: 320, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#8a5a2b';
+      ctx.fillRect(84, 306, 32, 16);
+    },
+  },
+  {
+    id: 'grape-bunch', name: 'Grape bunch', x: 300, y: 200, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#7fe07a';
+      for (const [gx, gy] of [[292, 192], [308, 192], [300, 204], [292, 214], [308, 214]]) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    },
+  },
+  {
+    id: 'orange-missing', name: 'Orange', x: 460, y: 320, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#8a5a2b';
+      ellipse(ctx, 460, 320, 16, 10);
+    },
+  },
+  {
+    id: 'juice-sign', name: 'Juice sign', x: 285, y: 250, r: 28,
+    apply(ctx) {
+      ctx.fillStyle = '#2c2118';
+      ctx.fillRect(249, 234, 72, 32);
+      ctx.fillStyle = '#ffd166';
+      ctx.font = 'bold 15px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('SWEET', 285, 251);
+    },
+  },
+  {
+    id: 'bunting-flag', name: 'Bunting flag', x: 200, y: 110, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ctx.beginPath();
+      ctx.moveTo(190, 104);
+      ctx.lineTo(210, 104);
+      ctx.lineTo(200, 122);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'balloon-color', name: 'Balloon', x: 520, y: 120, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#ff6b4a';
+      ellipse(ctx, 520, 120, 12, 15);
+    },
+  },
+  {
+    id: 'lemon-missing', name: 'Lemon', x: 70, y: 190, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#2f9e44';
+      ellipse(ctx, 70, 190, 14, 10);
+    },
+  },
+  {
+    id: 'strawberry-color', name: 'Strawberry', x: 480, y: 420, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#3f7dff';
+      ellipse(ctx, 480, 420, 9, 11);
+    },
+  },
+  {
+    id: 'basket-count', name: 'Fruit basket', x: 380, y: 420, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#fff3c4';
+      ellipse(ctx, 380, 420, 22, 12);
+    },
+  },
+];
+
+function fruitStall(ctx, x, w, awningA, awningB) {
+  ctx.fillStyle = '#3a2c22';
+  ctx.fillRect(x, 300, w, 90);
+  ctx.fillStyle = '#7a4a2b';
+  ctx.fillRect(x, 300, w, 10);
+  for (let i = 0; i < 5; i += 1) {
+    ctx.fillStyle = i % 2 === 0 ? awningA : awningB;
+    const sx = x - 8 + (i * (w + 16)) / 5;
+    ctx.beginPath();
+    ctx.moveTo(sx, 196);
+    ctx.lineTo(sx + (w + 16) / 5, 196);
+    ctx.lineTo(sx + (w + 16) / 5 - 6, 238);
+    ctx.lineTo(sx + 6, 238);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = '#2c2118';
+  ctx.fillRect(x - 8, 236, w + 16, 6);
+}
+
+function paintFruit(ctx, altered, t) {
+  // A fruit festival: striped stalls, watermelon, grapes, juice, bunting.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 280);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  cloud(ctx, 100, 60, 0.9, '#ffffff');
+  cloud(ctx, 300, 40, 0.7, '#ffffff');
+  gull(ctx, 180, 90, '#33506b');
+  // Bunting across the top.
+  ctx.strokeStyle = '#2e2a26';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 96);
+  ctx.quadraticCurveTo(280, 142, 560, 96);
+  ctx.stroke();
+  const bunting = ['#ff6b4a', '#ffd166', '#39c26d', '#3f7dff', '#ff8fc7'];
+  for (let i = 0; i < 9; i += 1) {
+    const bx = 40 + i * 60;
+    const by = 96 + Math.sin((bx / 560) * Math.PI) * 26;
+    ctx.fillStyle = bunting[i % bunting.length];
+    ctx.beginPath();
+    ctx.moveTo(bx - 10, by);
+    ctx.lineTo(bx + 10, by);
+    ctx.lineTo(bx, by + 18);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // Lemon tree on the left.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(66, 200, 8, 60);
+  ctx.fillStyle = '#2f9e44';
+  ctx.beginPath();
+  ctx.arc(70, 176, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  for (const [lx, ly] of [[52, 168], [70, 190], [88, 170], [78, 156]]) {
+    ellipse(ctx, lx, ly, 7, 9);
+  }
+  // Balloons on the right.
+  for (const [bx, by, bc] of [[520, 120, '#3f7dff'], [500, 100, '#ff8fc7'], [540, 96, '#ffd166']]) {
+    ctx.fillStyle = bc;
+    ellipse(ctx, bx, by, 12, 15);
+    ctx.strokeStyle = '#2e2a26';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(bx, by + 15);
+    ctx.quadraticCurveTo(bx - 4, by + 30, bx + 2, by + 42);
+    ctx.stroke();
+  }
+  // Grape bunch hanging in the middle.
+  ctx.strokeStyle = '#2f9e44';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(300, 176);
+  ctx.lineTo(300, 186);
+  ctx.stroke();
+  ctx.fillStyle = '#9b5de5';
+  for (const [gx, gy] of [[292, 192], [308, 192], [300, 204], [292, 214], [308, 214]]) {
+    ctx.beginPath();
+    ctx.arc(gx, gy, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Three stalls.
+  fruitStall(ctx, 48, 130, '#ff6b4a', '#fff7e0');
+  fruitStall(ctx, 232, 130, '#39c26d', '#fff7e0');
+  fruitStall(ctx, 416, 110, '#ffd166', '#fff7e0');
+  // Juice stand sign on the middle stall.
+  ctx.fillStyle = '#2c2118';
+  ctx.fillRect(249, 234, 72, 32);
+  ctx.fillStyle = '#ffd166';
+  ctx.font = 'bold 15px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FRESH', 285, 251);
+  // Watermelon slices on the left counter.
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.arc(100, 312, 16, 0, Math.PI);
+  ctx.fill();
+  ctx.fillStyle = '#2f9e44';
+  ctx.beginPath();
+  ctx.arc(100, 312, 16, 0, Math.PI);
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(94, 318, 1.5, 0, Math.PI * 2);
+  ctx.arc(104, 320, 1.5, 0, Math.PI * 2);
+  ctx.arc(100, 322, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8c42';
+  for (const [ox, oy] of [[126, 316], [140, 316], [133, 306]]) {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Orange pile on the right counter.
+  ctx.fillStyle = '#ff8c42';
+  for (const [ox, oy] of [[452, 316], [468, 316], [460, 304], [444, 328], [474, 328]]) {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = '#2f9e44';
+  ellipse(ctx, 460, 296, 6, 3);
+  // Juice glasses on the middle counter.
+  ctx.fillStyle = '#ff9f43';
+  ctx.fillRect(250, 292, 12, 16);
+  ctx.fillStyle = '#ff8fc7';
+  ctx.fillRect(268, 292, 12, 16);
+  ctx.fillStyle = '#7fe07a';
+  ctx.fillRect(286, 292, 12, 16);
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(250, 292, 48, 4);
+  // Baskets of strawberries on the ground.
+  ctx.fillStyle = '#8a5a2b';
+  ctx.fillRect(366, 412, 28, 16);
+  ctx.fillRect(466, 412, 28, 16);
+  ctx.fillStyle = '#e5484d';
+  for (const [sx, sy] of [[374, 408], [382, 406], [390, 408], [474, 408], [482, 406], [490, 408]]) {
+    ellipse(ctx, sx, sy, 6, 8);
+    ctx.fillStyle = '#2f9e44';
+    ellipse(ctx, sx, sy - 6, 4, 2);
+    ctx.fillStyle = '#e5484d';
+  }
+  // Sunny ground.
+  ctx.fillStyle = '#fff3c4';
+  ctx.fillRect(0, 390, 560, 80);
+  ctx.fillStyle = '#ffe9a8';
+  ellipse(ctx, 280, 450, 180, 12);
+  if (altered) for (const d of FRUIT_DIFFS) d.apply(ctx, t);
+}
+
+// --- Level 11: Pool Party --------------------------------------------------
+const POOL_DIFFS = [
+  {
+    id: 'duck-float', name: 'Duck float', x: 200, y: 300, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#ff8fc7';
+      ellipse(ctx, 200, 300, 20, 14);
+      ctx.beginPath();
+      ctx.arc(212, 290, 8, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'donut-sprinkles', name: 'Donut sprinkles', x: 350, y: 320, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#ff8fc7';
+      ctx.beginPath();
+      ctx.arc(350, 320, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4fc3f7';
+      ctx.beginPath();
+      ctx.arc(350, 320, 8, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+  {
+    id: 'ball-stripe', name: 'Beach ball stripe', x: 420, y: 260, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#39c26d';
+      ctx.beginPath();
+      ctx.moveTo(420, 242);
+      ctx.lineTo(436, 254);
+      ctx.lineTo(420, 272);
+      ctx.lineTo(406, 260);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'umbrella-stripe', name: 'Umbrella stripe', x: 100, y: 240, r: 26,
+    apply(ctx) {
+      ctx.fillStyle = '#2a9d8f';
+      ctx.beginPath();
+      ctx.moveTo(100, 222);
+      ctx.lineTo(124, 222);
+      ctx.lineTo(114, 248);
+      ctx.lineTo(100, 248);
+      ctx.closePath();
+      ctx.fill();
+    },
+  },
+  {
+    id: 'towel-color', name: 'Towel stripe', x: 480, y: 380, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#ff6b4a';
+      ctx.fillRect(456, 372, 48, 8);
+    },
+  },
+  {
+    id: 'cart-sign', name: 'Cart sign', x: 90, y: 370, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#2c2118';
+      ctx.fillRect(72, 362, 36, 14);
+      ctx.fillStyle = '#ffd166';
+      ctx.font = 'bold 10px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('JUICE', 90, 369);
+    },
+  },
+  {
+    id: 'lounger-missing', name: 'Sun lounger', x: 300, y: 430, r: 24,
+    apply(ctx) {
+      ctx.fillStyle = '#fff3c4';
+      ctx.fillRect(276, 416, 48, 28);
+    },
+  },
+  {
+    id: 'palm-coconuts', name: 'Palm coconuts', x: 520, y: 210, r: 22,
+    apply(ctx) {
+      ctx.fillStyle = '#7ec8f7';
+      ctx.beginPath();
+      ctx.arc(514, 212, 10, 0, Math.PI * 2);
+      ctx.arc(528, 214, 10, 0, Math.PI * 2);
+      ctx.fill();
+    },
+  },
+];
+
+function paintPool(ctx, altered, t) {
+  // A pool party: blue pool, duck and donut floats, umbrella, loungers.
+  ctx.fillStyle = daySky(ctx);
+  ctx.fillRect(0, 0, 560, 200);
+  sun(ctx, 480, 58, 24, '#f2b705');
+  cloud(ctx, 90, 60, 0.9, '#ffffff');
+  cloud(ctx, 280, 44, 0.7, '#ffffff');
+  gull(ctx, 160, 80, '#33506b');
+  // Sunny deck.
+  ctx.fillStyle = '#fff3c4';
+  ctx.fillRect(0, 200, 560, 270);
+  ctx.fillStyle = '#ffe9a8';
+  ellipse(ctx, 280, 450, 200, 12);
+  // The pool: blue water with lanes and sparkles.
+  ctx.fillStyle = '#4fc3f7';
+  ctx.beginPath();
+  ctx.roundRect(90, 230, 380, 150, 20);
+  ctx.fill();
+  ctx.fillStyle = '#2f9fd8';
+  ctx.beginPath();
+  ctx.roundRect(90, 230, 380, 150, 20);
+  ctx.save();
+  ctx.clip();
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 4; i += 1) {
+    ctx.beginPath();
+    ctx.moveTo(100 + i * 90, 250);
+    ctx.lineTo(100 + i * 90, 360);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = 2;
+  for (const [wx, wy, wl] of [[140, 280, 60], [260, 340, 70], [380, 290, 60]]) {
+    ctx.beginPath();
+    ctx.moveTo(wx, wy);
+    ctx.quadraticCurveTo(wx + wl / 2, wy - 5, wx + wl, wy);
+    ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(90, 230, 380, 150, 20);
+  ctx.stroke();
+  // Duck float.
+  ctx.fillStyle = '#ffd166';
+  ellipse(ctx, 200, 300, 20, 14);
+  ctx.beginPath();
+  ctx.arc(212, 290, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff9f43';
+  ctx.beginPath();
+  ctx.moveTo(219, 290);
+  ctx.lineTo(226, 292);
+  ctx.lineTo(219, 294);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2e2a26';
+  ctx.beginPath();
+  ctx.arc(213, 288, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  // Donut float with sprinkles.
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.arc(350, 320, 20, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#4fc3f7';
+  ctx.beginPath();
+  ctx.arc(350, 320, 8, 0, Math.PI * 2);
+  ctx.fill();
+  const sprinkles = ['#ffd166', '#3f7dff', '#39c26d', '#ffffff'];
+  sprinkles.forEach((c, i) => {
+    ctx.fillStyle = c;
+    const a = (i / 4) * Math.PI * 2 + 0.4;
+    ctx.fillRect(350 + Math.cos(a) * 13 - 3, 320 + Math.sin(a) * 13 - 1, 6, 2);
+  });
+  // Striped umbrella on the deck.
+  ctx.fillStyle = '#8a6b46';
+  ctx.fillRect(98, 248, 4, 60);
+  const umbrella2 = ['#ff6b4a', '#fffdf5', '#ffd166', '#fffdf5', '#3f7dff'];
+  for (let i = 0; i < 5; i += 1) {
+    ctx.fillStyle = umbrella2[i];
+    ctx.beginPath();
+    ctx.moveTo(100, 222);
+    ctx.lineTo(56 + i * 18, 248);
+    ctx.lineTo(56 + (i + 1) * 18, 248);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.arc(100, 220, 5, 0, Math.PI * 2);
+  ctx.fill();
+  // Beach ball on the deck.
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(420, 260, 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff6b4a';
+  ctx.beginPath();
+  ctx.moveTo(420, 242);
+  ctx.lineTo(436, 254);
+  ctx.lineTo(420, 272);
+  ctx.lineTo(406, 260);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath();
+  ctx.moveTo(420, 242);
+  ctx.lineTo(406, 260);
+  ctx.lineTo(420, 272);
+  ctx.lineTo(434, 262);
+  ctx.closePath();
+  ctx.fill();
+  // Towels on the deck.
+  ctx.fillStyle = '#3f7dff';
+  ctx.fillRect(456, 372, 48, 20);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(456, 372, 48, 6);
+  ctx.fillStyle = '#ffd166';
+  ctx.fillRect(456, 386, 48, 6);
+  ctx.fillStyle = '#ff8fc7';
+  ctx.fillRect(456, 402, 48, 20);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(456, 402, 48, 6);
+  // Ice cream cart.
+  ctx.fillStyle = '#fffdf5';
+  ctx.fillRect(60, 368, 60, 30);
+  ctx.fillStyle = '#ff6b4a';
+  ctx.fillRect(60, 368, 60, 8);
+  ctx.fillStyle = '#5b3a1e';
+  ctx.beginPath();
+  ctx.arc(70, 398, 6, 0, Math.PI * 2);
+  ctx.arc(110, 398, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ff8fc7';
+  ctx.beginPath();
+  ctx.arc(90, 356, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 10px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('ICE CREAM', 90, 384);
+  // Sun loungers.
+  for (const lx of [280, 340]) {
+    ctx.fillStyle = '#ff9f43';
+    ctx.fillRect(lx, 420, 44, 8);
+    ctx.fillRect(lx + 30, 410, 14, 12);
+    ctx.strokeStyle = '#8a6b46';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx + 4, 428);
+    ctx.lineTo(lx + 4, 440);
+    ctx.moveTo(lx + 40, 428);
+    ctx.lineTo(lx + 40, 440);
+    ctx.stroke();
+  }
+  // Palm tree.
+  ctx.fillStyle = '#8a6b46';
+  ctx.beginPath();
+  ctx.moveTo(516, 280);
+  ctx.quadraticCurveTo(520, 240, 528, 216);
+  ctx.lineTo(534, 216);
+  ctx.quadraticCurveTo(528, 242, 524, 280);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#2f9e44';
+  for (const [fx, fy, rot] of [[500, 208, -0.6], [528, 202, 0.2], [548, 216, 0.9], [508, 226, -1.2], [544, 232, 1.4]]) {
+    ctx.save();
+    ctx.translate(fx, fy);
+    ctx.rotate(rot);
+    ctx.beginPath();
+    ctx.ellipse(18, 0, 22, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = '#7a4a2b';
+  ctx.beginPath();
+  ctx.arc(514, 212, 6, 0, Math.PI * 2);
+  ctx.arc(528, 214, 6, 0, Math.PI * 2);
+  ctx.fill();
+  if (altered) for (const d of POOL_DIFFS) d.apply(ctx, t);
+}
+
+const PAINTERS = [
+  paintHarbor, paintMarket, paintMeadow, paintGarden, paintBeach,
+  paintFarm, paintCandy, paintButterflyMeadow, paintToy, paintFruit, paintPool,
+];
+const DIFF_SETS = [
+  HARBOR_DIFFS, MARKET_DIFFS, MEADOW_DIFFS, GARDEN_DIFFS, BEACH_DIFFS,
+  FARM_DIFFS, CANDY_DIFFS, BUTTERFLY_DIFFS, TOY_DIFFS, FRUIT_DIFFS, POOL_DIFFS,
+];
 
 // ------------------------------------------------------------------ world
 
@@ -870,7 +2869,7 @@ export function createWorld(random) {
     if (state.hintsLeft <= 0 || state.hintCooldown > 0) return 0;
     const unfound = diffs().filter((d) => !state.found.includes(d.id));
     if (unfound.length === 0) return 0;
-    const pick = unfound[Math.floor(random.next() * unfound.length)];
+    const pick = random.shuffle(unfound)[0];
     state.hintPulse = { id: pick.id, x: pick.x, y: pick.y, t: HINT.pulseSeconds };
     state.hintsLeft -= 1;
     state.hintCooldown = HINT.cooldownSeconds;

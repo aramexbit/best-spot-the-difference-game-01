@@ -1,5 +1,6 @@
 # Spot the Difference — ignored files.
 # Build outputs and local tooling only; the game itself ships as source.
+# v2: eleven scenes, 91 differences — the output rules are unchanged.
 out/
 node_modules/
 .DS_Store

@@ -1,19 +1,22 @@
 /* Spot the Difference — page chrome around the canvas.
    The game itself is drawn entirely on the canvas (see src/render.js);
    this file only centers it, keeps it at a 16:9 frame, and styles the
-   small keyboard-help line and the screen-reader status line. */
+   small keyboard-help line and the screen-reader status line.
+
+   v2: a sunny page to match the game — warm cream background, dark
+   readable text, a soft shadow under the frame. */
 
 html,
 body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #10141f;
+  background: linear-gradient(180deg, #aee3ff 0%, #ffe9a8 100%);
 }
 
 body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  color: #f2f4f8;
+  color: #2e2a26;
 }
 
 .stage {
@@ -29,25 +32,30 @@ body {
 
 #game {
   display: block;
+  box-sizing: border-box;
   width: min(100%, calc((100vh - 64px) * 16 / 9));
   max-height: calc(100vh - 64px);
   aspect-ratio: 16 / 9;
   border-radius: 12px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+  border: 3px solid #fffdf5;
+  box-shadow: 0 12px 48px rgba(120, 80, 20, 0.3);
   touch-action: none;
   cursor: crosshair;
-  background: #141a26;
+  background: #aee3ff;
 }
 
 #game:focus-visible {
-  outline: 2px solid #4fc3f7;
+  outline: 2px solid #ff7a3d;
   outline-offset: 3px;
 }
 
 .keys {
   margin: 0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 253, 245, 0.75);
   font-size: 13px;
-  color: #9aa5bd;
+  color: #7a6a55;
   text-align: center;
 }
 

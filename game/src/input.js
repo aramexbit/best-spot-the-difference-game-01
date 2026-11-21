@@ -1,7 +1,9 @@
 // Input: mouse clicks and keyboard, translated into game actions.
 // The canvas is drawn in a fixed 1280x720 logical space and scaled to
 // the window by CSS, so a click's client coordinates are converted back
-// to logical coordinates before anything tests them.
+// to logical coordinates before anything tests them. Arrow keys move
+// the highlighted card on the level-select screen (eleven cards now,
+// so the keyboard is the quick way across them).
 //
 // Actions are bit flags consumed once per frame by main.js; a click also
 // carries its logical position, because the world needs to know where
@@ -16,6 +18,8 @@ export const ACTION_NEXT = 8;
 export const ACTION_RETRY = 16;
 export const ACTION_BACK = 32;
 export const ACTION_MUTE = 64;
+export const ACTION_MOVE_LEFT = 128;
+export const ACTION_MOVE_RIGHT = 256;
 
 const KEY_ACTIONS = {
   Enter: ACTION_CONFIRM,
@@ -31,6 +35,8 @@ const KEY_ACTIONS = {
   m: ACTION_MUTE,
   M: ACTION_MUTE,
   Escape: ACTION_BACK,
+  ArrowLeft: ACTION_MOVE_LEFT,
+  ArrowRight: ACTION_MOVE_RIGHT,
 };
 
 export function createInput(canvas) {
